@@ -57,6 +57,10 @@ public class Recorder {
      * do not delete, called via agent instrumentation
      */
     public static void start(String methodName) {
+//        if (!switchedOn.get()) {
+//            debug("not starting to record as recorder is not running");
+//            return;
+//        }
         StackEntry stackEntry = new StackEntry(methodName, System.nanoTime(), stack.get().size());
         debug("starting to record " + stackEntry);
         stack.get().push(stackEntry);
@@ -67,6 +71,10 @@ public class Recorder {
      * do not delete, called via agent instrumentation
      */
     public static void stop() {
+//        if (!switchedOn.get()) {
+//            debug("not stopping to record as recorder is not running");
+//            return;
+//        }
         StackEntry stackEntry = stack.get().pop();
         debug("stopping to record " + stackEntry);
         stackEntry.end();

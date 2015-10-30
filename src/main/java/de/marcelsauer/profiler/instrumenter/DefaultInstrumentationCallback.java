@@ -28,4 +28,29 @@ public class DefaultInstrumentationCallback implements Instrumenter.Instrumentat
             logger.warn(String.format("could not instrument method %s: %s", declaredMethod.getLongName(), e.getMessage()));
         }
     }
+
+//    public void instrument(CtMethod declaredMethod) throws Exception {
+//        String methodNameLong = declaredMethod.getLongName();
+//
+//        boolean startRecorder = isRecorderStartMethod(declaredMethod);
+//
+//        if (startRecorder) {
+//            logger.debug("[will start recorder for] method '" + declaredMethod.getLongName() + "'");
+//            declaredMethod.insertBefore("de.marcelsauer.profiler.recorder.Recorder.switchOn();" + "de.marcelsauer.profiler.recorder.Recorder.start(\"" + methodNameLong + "\");");
+//            declaredMethod.insertAfter("de.marcelsauer.profiler.recorder.Recorder.stop();" + "de.marcelsauer.profiler.recorder.Recorder.switchOff();", true);
+//        } else {
+//            logger.debug("[will record] method '" + declaredMethod.getLongName() + "'");
+//            declaredMethod.insertBefore("de.marcelsauer.profiler.recorder.Recorder.start(\"" + methodNameLong + "\");");
+//            declaredMethod.insertAfter("de.marcelsauer.profiler.recorder.Recorder.stop();", true);
+//        }
+//    }
+//
+//    private boolean isRecorderStartMethod(CtMethod declaredMethod) throws NotFoundException {
+//        for (CtClass interf : declaredMethod.getDeclaringClass().getInterfaces()) {
+//            if (config.getRecorderStartInterfaces().contains(interf.getName())) {
+//                return true;
+//            }
+//        }
+//        return false;
+//    }
 }
