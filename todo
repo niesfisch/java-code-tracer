@@ -1,0 +1,4 @@
+- config
+-- hot reload prevents need for app restart on config changes
+-- maxpaths count (prevent heap overflow)
+-- collect largest max-n paths

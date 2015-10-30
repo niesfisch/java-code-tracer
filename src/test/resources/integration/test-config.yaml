@@ -1,0 +1,9 @@
+# Comment
+classes:
+    included:
+        - ^integration.package.*
+    excluded:
+        - ^something.excluded.*
+        - .*junit.*
+        - .*intellij.*
+        - .*eclipse.*

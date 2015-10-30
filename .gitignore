@@ -1,0 +1,13 @@
+.idea
+*.iml
+.classpath
+.classpath-e
+.clover
+.project
+.tmp
+.settings/
+.metadata
+eclipse-build/
+target/
+
+emn-config.yaml
