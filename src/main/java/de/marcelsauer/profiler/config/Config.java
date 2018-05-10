@@ -1,9 +1,12 @@
 package de.marcelsauer.profiler.config;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Set;
+
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
-
-import java.util.Set;
 
 /**
  * yaml bean
@@ -21,7 +24,12 @@ public class Config {
 
     public static Config createCustomFromYamlFile(String yamlFile) {
         Yaml yaml = new Yaml(new Constructor(Config.class));
-        return (Config) yaml.load(FileUtils.getConfigFromHomeDirAsStream(yamlFile));
+        try {
+            InputStream result = new FileInputStream(yamlFile);
+            return (Config) yaml.load(result);
+        } catch (IOException e) {
+            throw new RuntimeException("could not load " + yamlFile);
+        }
     }
 
     @Override

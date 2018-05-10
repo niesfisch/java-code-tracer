@@ -1,23 +1,20 @@
 package de.marcelsauer.profiler.transformer;
 
-import de.marcelsauer.profiler.config.Config;
-import de.marcelsauer.profiler.instrumenter.Instrumenter;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
-
-import java.lang.instrument.IllegalClassFormatException;
-
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@RunWith(PowerMockRunner.class)
-@PrepareForTest({Class.class})
+import java.lang.instrument.IllegalClassFormatException;
+
+import org.junit.Test;
+
+import de.marcelsauer.profiler.config.Config;
+import de.marcelsauer.profiler.instrumenter.Instrumenter;
+
 public class TransformerTest {
+
     private final Config config = new Config();
 
     @Test

@@ -21,7 +21,8 @@ public class ConfigCreatorTest {
 
         //then
         assertNotNull(configuration);
-        assertEquals(1, configuration.classes.included.size());
+        assertEquals(0, configuration.classes.included.size());
+        assertEquals(0, configuration.classes.excluded.size());
     }
 
 }

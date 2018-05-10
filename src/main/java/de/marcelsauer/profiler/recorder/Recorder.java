@@ -1,11 +1,12 @@
 package de.marcelsauer.profiler.recorder;
 
-import de.marcelsauer.profiler.collect.Collector;
-import org.apache.log4j.Logger;
-
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Stack;
+
+import org.apache.log4j.Logger;
+
+import de.marcelsauer.profiler.collect.Collector;
 
 /**
  * @author msauer
@@ -57,10 +58,6 @@ public class Recorder {
      * do not delete, called via agent instrumentation
      */
     public static void start(String methodName) {
-//        if (!switchedOn.get()) {
-//            debug("not starting to record as recorder is not running");
-//            return;
-//        }
         StackEntry stackEntry = new StackEntry(methodName, System.nanoTime(), stack.get().size());
         debug("starting to record " + stackEntry);
         stack.get().push(stackEntry);
@@ -71,10 +68,6 @@ public class Recorder {
      * do not delete, called via agent instrumentation
      */
     public static void stop() {
-//        if (!switchedOn.get()) {
-//            debug("not stopping to record as recorder is not running");
-//            return;
-//        }
         StackEntry stackEntry = stack.get().pop();
         debug("stopping to record " + stackEntry);
         stackEntry.end();
@@ -92,6 +85,7 @@ public class Recorder {
     }
 
     private static void recordingFinished() {
+        debug("recording finished for stack");
         StringBuilder sb = new StringBuilder();
         for (StackEntry call : Recorder.getCalls()) {
             String prefix = "";
@@ -99,30 +93,29 @@ public class Recorder {
                 prefix = prefix + "\t";
             }
             sb.append(String.format("%s%s\n", prefix, call.methodName));
-            //info(String.format("%s%s[%dms] [%dns]", prefix, call.methodName, (call.getDuration() / 1000000), call.getDuration()));
         }
         Collector.collect(sb.toString());
         stack.get().clear();
         calls.get().clear();
     }
 
-    public static List<StackEntry> getCalls() {
+    private static List<StackEntry> getCalls() {
         return calls.get();
     }
 
     public static class StackEntry {
-        public final String methodName;
-        public final long startNanos;
-        public long endNanos;
-        public int level;
+        final String methodName;
+        final long startNanos;
+        long endNanos;
+        int level;
 
-        public StackEntry(String methodName, long startNanos, int level) {
+        StackEntry(String methodName, long startNanos, int level) {
             this.methodName = methodName;
             this.startNanos = startNanos;
             this.level = level;
         }
 
-        public void end() {
+        void end() {
             this.endNanos = System.nanoTime();
         }
 

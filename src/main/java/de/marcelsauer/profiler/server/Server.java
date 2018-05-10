@@ -34,23 +34,36 @@ public class Server {
     public void start() {
         startTime = new Date();
 
-        int port = 9001;
-        String p = System.getProperty("tracer.server.port");
-        if (p != null && !"".equals(p.trim())) {
-            port = Integer.parseInt(p);
-        }
+        int port = getPort();
 
         try {
             this.httpServer = HttpServer.create(new InetSocketAddress(port), 0);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+        configureRouting();
+
+        this.httpServer.start();
+
+        this.addShutdownHook(this);
+
+        LOGGER.info(String.format("started status server on port %d%n", port));
+    }
+
+    private void configureRouting() {
         this.httpServer.createContext("/status/", createStatusHandler());
         this.httpServer.createContext("/purge/", createPurgeHandler());
         this.httpServer.createContext("/stacks/", createStackHandler());
-        this.httpServer.start();
-        this.addShutdownHook(this);
-        LOGGER.info(String.format("started health status server on port %d%n", port));
+    }
+
+    private int getPort() {
+        int port = 9001;
+        String p = System.getProperty("jct.tracer.server.port");
+        if (p != null && !"".equals(p.trim())) {
+            port = Integer.parseInt(p);
+        }
+        return port;
     }
 
     private class Stats {
@@ -122,7 +135,7 @@ public class Server {
     }
 
     private HttpHandler createStackHandler() {
-        return new HttpHandler() {
+        return  new HttpHandler() {
             public void handle(HttpExchange exchange) throws IOException {
                 addNoCache(exchange);
                 addText(exchange);

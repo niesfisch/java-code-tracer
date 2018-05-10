@@ -1,10 +1,10 @@
 package de.marcelsauer.profiler.collect;
 
-import org.apache.log4j.Logger;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.log4j.Logger;
 
 /**
  * @author msauer
@@ -15,7 +15,7 @@ public class Collector {
 
     private static final Map<String, Integer> stacks = new HashMap<String, Integer>();
 
-    public static void collect(String trace) {
+    public static synchronized void collect(String trace) {
         if (stacks.containsKey(trace)) {
             stacks.put(trace, stacks.get(trace) + 1);
         } else {

@@ -10,10 +10,6 @@ public class Classes {
     public Set<String> included = new HashSet<String>();
     public Set<String> excluded = new HashSet<String>();
 
-    public boolean isIncludedPackagesOnly() {
-        return !this.included.isEmpty();
-    }
-
     @Override
     public String toString() {
         return "Classes{" +

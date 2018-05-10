@@ -1,17 +1,3 @@
-# Comment
 classes:
-    included:
-        - .*
-    excluded:
-        - ^de.marcelsauer.profiler.*
-        - ^(java|sun|com|org|io|biz|jdk).*
-        - .*By.*CGLIB\$\$.*
-        - .*_javassist_.*
-
-# todo, rename to filter ....
-#recorder:
-#  interfaces:
-#    - integration.package1.InterfaceA
-#  superClasses: []
-#  classLevelAnnotations: []
-#  methodLevelAnnotations: []
+    included: []
+    excluded: []

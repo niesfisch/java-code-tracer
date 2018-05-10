@@ -1,27 +1,19 @@
 package de.marcelsauer.profiler.config;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * @author msauer
  */
-public class FileUtils {
+class FileUtils {
 
-    public static InputStream getConfigFromHomeDirAsStream(String configFileName) {
+    static String getLocalResource(String file) {
         try {
-            File homeDir = new File(System.getProperty("user.home"));
-            File configFile = new File(homeDir + "/.code-tracer/", configFileName);
-            return new FileInputStream(configFile);
-        } catch (IOException e) {
-            throw new RuntimeException("could not load " + configFileName);
-        }
-    }
-
-    public static String getLocalResource(String theName) {
-        try {
-            InputStream input = FileUtils.class.getClassLoader().getResourceAsStream(theName);
+            InputStream input = FileUtils.class.getClassLoader().getResourceAsStream(file);
             if (input == null) {
-                throw new RuntimeException("Can not load " + theName);
+                throw new RuntimeException("Can not load " + file);
             }
             BufferedInputStream is = new BufferedInputStream(input);
             StringBuilder buf = new StringBuilder(3000);

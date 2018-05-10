@@ -1,0 +1,9 @@
+# some comment
+classes:
+    included:
+        # include one explicit class
+        - ^some.package.with.ClassA
+        # include some classes in certain packages that match regex
+        - ^some.package.with.more.classes.*
+    # exlude nothing, as per default nothing will be included, use this to tune to wide includes ...
+    excluded: []

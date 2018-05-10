@@ -3,11 +3,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>de.marcel</groupId>
-    <artifactId>javaagent-sample</artifactId>
+    <artifactId>java-code-tracer</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>javaagent-sample</name>
+    <name>java-code-tracer</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -25,6 +25,7 @@
             <url>see LICENCE.txt</url>
         </license>
     </licenses>
+
     <repositories>
         <repository>
             <id>Sonatype-public</id>
@@ -34,6 +35,13 @@
     </repositories>
 
     <dependencies>
+        <dependency>
+            <groupId>com.sun</groupId>
+            <artifactId>tools</artifactId>
+            <version>1.6.0</version>
+            <scope>system</scope>
+            <systemPath>${java.home}/../lib/tools.jar</systemPath>
+        </dependency>
         <dependency>
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
@@ -59,27 +67,10 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.powermock</groupId>
-            <artifactId>powermock-module-junit4</artifactId>
-            <version>1.5</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.powermock</groupId>
-            <artifactId>powermock-api-mockito</artifactId>
-            <version>1.5</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
             <version>1.2.17</version>
             <type>jar</type>
-        </dependency>
-        <dependency>
-            <groupId>biz.minaret.log4j</groupId>
-            <artifactId>datedFileAppender</artifactId>
-            <version>1.0.2</version>
         </dependency>
     </dependencies>
     <build>
@@ -110,6 +101,7 @@
                     <archive>
                         <manifestEntries>
                             <Premain-Class>de.marcelsauer.profiler.agent.Agent</Premain-Class>
+                            <Agent-Class>de.marcelsauer.profiler.agent.Agent</Agent-Class>
                             <Can-Redefine-Classes>true</Can-Redefine-Classes>
                             <Can-Retransform-Classes>true</Can-Retransform-Classes>
                             <Can-Set-Native-Method-Prefix>true</Can-Set-Native-Method-Prefix>
@@ -122,9 +114,7 @@
                 <executions>
                     <execution>
                         <id>make-assembly</id>
-                        <!-- this is used for inheritance merges -->
                         <phase>package</phase>
-                        <!-- bind to the packaging phase -->
                         <goals>
                             <goal>single</goal>
                         </goals>

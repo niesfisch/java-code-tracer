@@ -15,7 +15,7 @@ public class Instrumenter {
 
     private static final Logger logger = Logger.getLogger(Instrumenter.class);
     private final InstrumentationCallback callback;
-    boolean done = false;
+    private boolean done = false;
 
     public Instrumenter(InstrumentationCallback callback) {
         this.callback = callback;

@@ -8,8 +8,8 @@ import java.util.Set;
  * @author msauer
  */
 public class Statistics {
-    public static final Set<String> instrumentedMethods = new HashSet<String>();
-    public static final Set<String> instrumentedClasses = new HashSet<String>();
+    private static final Set<String> instrumentedMethods = new HashSet<String>();
+    private static final Set<String> instrumentedClasses = new HashSet<String>();
 
     public static void addInstrumentedClass(String fqClazz) {
         instrumentedClasses.add(fqClazz);

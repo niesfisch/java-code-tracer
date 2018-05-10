@@ -1,0 +1,6 @@
+# some comment
+classes:
+    included:
+        - ^.*hell.*
+    excluded:
+        - .*HelloWorldLoop.*
