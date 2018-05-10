@@ -109,7 +109,7 @@ you should see "Hello World .." printed to the console multiple times.
 
 open another tab ... 
 
-... check the logs
+... check the logs ...
 
 ```bash
 cat /tmp/jct2/jct_agent.log
