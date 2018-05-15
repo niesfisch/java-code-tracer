@@ -38,7 +38,7 @@ ls -al ./target/
 
 ```bash
 java -jar someApplication.jar
-  -javaagent: /path_to/target/java-code-tracer-1.0-SNAPSHOT-jar-with-dependencies.jar
+  -javaagent:"/path_to/target/java-code-tracer-1.0-SNAPSHOT-jar-with-dependencies.jar"
   -Djct.loglevel=INFO
   -Djct.config=${HOME}/.jct/config-sample.yaml (optional, default is under /src/main/resources/META-INF/config.yaml, will be merged)
   -Djct.tracer.server.port=9002 (default=9001)
