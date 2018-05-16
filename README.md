@@ -112,7 +112,7 @@ open another tab ...
 ... check the logs ...
 
 ```bash
-cat /tmp/jct2/jct_agent.log
+cat /tmp/jct/jct_agent.log
 ```
 
 ... and check if you can query the server
