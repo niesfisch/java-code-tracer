@@ -16,6 +16,9 @@ public class DefaultInstrumentationCallback implements Instrumenter.Instrumentat
 
     public DefaultInstrumentationCallback(Config config) {
         this.config = config;
+
+        // preload recorder class
+        Recorder.touch();
     }
 
     public void instrument(CtMethod declaredMethod) {

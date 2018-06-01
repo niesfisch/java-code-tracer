@@ -1,12 +1,13 @@
 package de.marcelsauer.profiler.recorder;
 
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Stack;
 
 import org.apache.log4j.Logger;
 
-import de.marcelsauer.profiler.collect.Collector;
+import de.marcelsauer.profiler.processor.RecordingEvent;
+import de.marcelsauer.profiler.processor.StackProcessor;
+import de.marcelsauer.profiler.processor.StackProcessorFactory;
 
 /**
  * @author msauer
@@ -14,61 +15,43 @@ import de.marcelsauer.profiler.collect.Collector;
 public class Recorder {
     private static final Logger logger = Logger.getLogger(Recorder.class);
 
-    private static final ThreadLocal<Stack<StackEntry>> stack = new ThreadLocal<Stack<StackEntry>>() {
+    private static final ThreadLocal<Stack<de.marcelsauer.profiler.processor.Stack.StackEntry>> stack = new ThreadLocal<Stack<de.marcelsauer.profiler.processor.Stack.StackEntry>>() {
         @Override
-        protected Stack<StackEntry> initialValue() {
-            return new Stack<StackEntry>();
-        }
-    };
-    private static final ThreadLocal<LinkedList<StackEntry>> calls = new ThreadLocal<LinkedList<StackEntry>>() {
-        @Override
-        protected LinkedList<StackEntry> initialValue() {
-            return new LinkedList<StackEntry>();
-        }
-    };
-    private static ThreadLocal<Boolean> switchedOn = new ThreadLocal<Boolean>() {
-        @Override
-        protected Boolean initialValue() {
-            return false;
+        protected Stack<de.marcelsauer.profiler.processor.Stack.StackEntry> initialValue() {
+            return new Stack<>();
         }
     };
 
-    /**
-     * do not delete, called via agent instrumentation
-     */
-    public static void switchOn() {
-        debug("starting recorder");
-        switchedOn.set(true);
+    private static final ThreadLocal<LinkedList<de.marcelsauer.profiler.processor.Stack.StackEntry>> calls = new ThreadLocal<LinkedList<de.marcelsauer.profiler.processor.Stack.StackEntry>>() {
+        @Override
+        protected LinkedList<de.marcelsauer.profiler.processor.Stack.StackEntry> initialValue() {
+            return new LinkedList<>();
+        }
+    };
+
+    private static final StackProcessor stackProcessor = StackProcessorFactory.getStackProcessor();
+
+    public static void touch() {
+        // just to load the class ...
     }
 
     /**
-     * do not delete, called via agent instrumentation
-     */
-    public static void switchOff() {
-        if (!switchedOn.get()) {
-            throw new IllegalStateException("recoder is not running");
-        }
-        debug("stopping recorder");
-        switchedOn.set(false);
-
-        recordingFinished();
-    }
-
-    /**
+     * call to this method is inserted at the beginning of each method via instrumentation.
      * do not delete, called via agent instrumentation
      */
     public static void start(String methodName) {
-        StackEntry stackEntry = new StackEntry(methodName, System.nanoTime(), stack.get().size());
+        de.marcelsauer.profiler.processor.Stack.StackEntry stackEntry = new de.marcelsauer.profiler.processor.Stack.StackEntry(methodName, System.nanoTime(), stack.get().size());
         debug("starting to record " + stackEntry);
         stack.get().push(stackEntry);
         calls.get().add(stackEntry);
     }
 
     /**
+     * call to this method is inserted at the beginning of each method via instrumentation.
      * do not delete, called via agent instrumentation
      */
     public static void stop() {
-        StackEntry stackEntry = stack.get().pop();
+        de.marcelsauer.profiler.processor.Stack.StackEntry stackEntry = stack.get().pop();
         debug("stopping to record " + stackEntry);
         stackEntry.end();
         if (stack.get().empty()) {
@@ -86,48 +69,12 @@ public class Recorder {
 
     private static void recordingFinished() {
         debug("recording finished for stack");
-        StringBuilder sb = new StringBuilder();
-        for (StackEntry call : Recorder.getCalls()) {
-            String prefix = "";
-            for (int i = 0; i < call.level; i++) {
-                prefix = prefix + "\t";
-            }
-            sb.append(String.format("%s%s\n", prefix, call.methodName));
-        }
-        Collector.collect(sb.toString());
-        stack.get().clear();
-        calls.get().clear();
+
+        Statistics.recordingFinished();
+        stackProcessor.process(new RecordingEvent(new de.marcelsauer.profiler.processor.Stack(calls.get())));
+
+        stack.set(new Stack<de.marcelsauer.profiler.processor.Stack.StackEntry>());
+        calls.set(new LinkedList<de.marcelsauer.profiler.processor.Stack.StackEntry>());
     }
 
-    private static List<StackEntry> getCalls() {
-        return calls.get();
-    }
-
-    public static class StackEntry {
-        final String methodName;
-        final long startNanos;
-        long endNanos;
-        int level;
-
-        StackEntry(String methodName, long startNanos, int level) {
-            this.methodName = methodName;
-            this.startNanos = startNanos;
-            this.level = level;
-        }
-
-        void end() {
-            this.endNanos = System.nanoTime();
-        }
-
-        public long getDuration() {
-            return this.endNanos - this.startNanos;
-        }
-
-        @Override
-        public String toString() {
-            return "StackEntry{" +
-                "methodName='" + methodName + '\'' +
-                '}';
-        }
-    }
 }

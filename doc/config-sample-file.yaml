@@ -7,3 +7,6 @@ classes:
         - ^some.package.with.more.classes.*
     # exlude nothing, as per default nothing will be included, use this to tune to wide includes ...
     excluded: []
+processor:
+    fullQualifiedClass: de.marcelsauer.profiler.processor.file.AsyncFileWritingStackProcessor
+    stackFolderName: /tmp/stacks/

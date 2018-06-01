@@ -8,4 +8,5 @@ classes:
         - .*intellij.*
         - .*eclipse.*
 processor:
-    fullQualifiedClass: integration.CountingInMemoryStackProcessor
+    fullQualifiedClass: de.marcelsauer.profiler.processor.file.AsyncFileWritingStackProcessor
+    stackFolderName: /tmp/stacks/

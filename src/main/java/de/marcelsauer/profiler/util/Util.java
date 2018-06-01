@@ -27,4 +27,8 @@ public class Util {
         }
     }
 
+    public static boolean isEmpty(String in) {
+        return in == null || in.trim().length() == 0;
+    }
+
 }

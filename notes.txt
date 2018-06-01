@@ -1,0 +1,16 @@
+just for me ...
+===============
+
+aggregation by stack ...
+
+cat target/stacks/jct_xxx.log | perl -pe 's/.*\[(.*)\].*/\1/' | sort | uniq -c
+
+{
+  "aggs": {
+    "group_by_method": {
+      "terms": {
+        "field": "stack.keyword"
+      }
+    }
+  }
+}

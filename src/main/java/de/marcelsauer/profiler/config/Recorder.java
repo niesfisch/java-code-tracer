@@ -9,11 +9,10 @@ import java.util.Set;
  * @author msauer
  */
 public class Recorder {
-    public Set<String> interfaces = new HashSet<String>();
-    public Set<String> superClasses = new HashSet<String>();
-    public Set<String> classLevelAnnotations = new HashSet<String>();
-    public Set<String> methodLevelAnnotations = new HashSet<String>();
-
+    public Set<String> interfaces = new HashSet<>();
+    public Set<String> superClasses = new HashSet<>();
+    public Set<String> classLevelAnnotations = new HashSet<>();
+    public Set<String> methodLevelAnnotations = new HashSet<>();
 
     @Override
     public String toString() {

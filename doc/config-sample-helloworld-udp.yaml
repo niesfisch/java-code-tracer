@@ -1,0 +1,10 @@
+# some comment
+classes:
+    included:
+        - ^.*hell.*
+    excluded:
+        - .*HelloWorldLoop.*
+processor:
+    fullQualifiedClass: de.marcelsauer.profiler.processor.udp.AsyncUdpStackProcessor
+    udpHost: localhost
+    udpPort: 9999

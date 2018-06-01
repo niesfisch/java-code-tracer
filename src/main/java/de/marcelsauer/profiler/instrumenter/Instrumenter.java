@@ -1,12 +1,13 @@
 package de.marcelsauer.profiler.instrumenter;
 
-import de.marcelsauer.profiler.collect.Statistics;
+import org.apache.log4j.Logger;
+
+import de.marcelsauer.profiler.recorder.Statistics;
 import de.marcelsauer.profiler.util.Util;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtMethod;
 import javassist.LoaderClassPath;
-import org.apache.log4j.Logger;
 
 /**
  * @author msauer
@@ -43,7 +44,6 @@ public class Instrumenter {
                 try {
                     this.callback.instrument(declaredMethod);
                     Statistics.addInstrumentedMethod(declaredMethod.getLongName());
-                    Statistics.addInstrumentedClass(className);
                 } catch (Exception e) {
                     logger.warn(String.format("could not instrument method '%s': %s", className, e.getMessage()));
                     return null;
@@ -52,6 +52,9 @@ public class Instrumenter {
 
             byte[] bytes = cc.toBytecode();
             cc.detach();
+
+            Statistics.addInstrumentedClass(className);
+
             return bytes;
         } catch (Exception ex) {
             logger.warn(String.format("could not instrument class '%s': %s", className, ex.getMessage()));

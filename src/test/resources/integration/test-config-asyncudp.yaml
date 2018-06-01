@@ -8,4 +8,6 @@ classes:
         - .*intellij.*
         - .*eclipse.*
 processor:
-    fullQualifiedClass: integration.CountingInMemoryStackProcessor
+    fullQualifiedClass: de.marcelsauer.profiler.processor.udp.AsyncUdpStackProcessor
+    udpHost: localhost
+    udpPort: 9999

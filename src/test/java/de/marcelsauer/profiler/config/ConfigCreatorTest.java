@@ -1,15 +1,15 @@
 package de.marcelsauer.profiler.config;
 
-import org.junit.Test;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+
+import org.junit.Test;
 
 public class ConfigCreatorTest {
 
     @Test
     public void testThatNoIncludesOrExcludesDoesntBreak() {
-        Config.createDefaultFromYamlFile("META-INF/config.yaml");
+        Config.initDefaultFromYamlFile();
     }
 
     @Test
@@ -17,7 +17,7 @@ public class ConfigCreatorTest {
         //given
 
         //when
-        Config configuration = Config.createDefaultFromYamlFile("META-INF/config.yaml");
+        Config configuration = Config.initDefaultFromYamlFile();
 
         //then
         assertNotNull(configuration);

@@ -1,22 +1,23 @@
 /*
  * Copyright: EliteMedianet GmbH, Hamburg
  */
-package de.marcelsauer.profiler.server;
+package de.marcelsauer.profiler.processor.inmemory.server;
+
+import java.io.FileWriter;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Map;
+
+import org.apache.log4j.Logger;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
-import de.marcelsauer.profiler.collect.Collector;
-import de.marcelsauer.profiler.collect.Statistics;
-import org.apache.log4j.Logger;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.net.InetSocketAddress;
-import java.util.Date;
-import java.util.Map;
-import java.util.Set;
+import de.marcelsauer.profiler.processor.inmemory.InMemoryCountingCollector;
+import de.marcelsauer.profiler.recorder.Statistics;
 
 /**
  * @author msauer
@@ -26,8 +27,9 @@ public class Server {
     private static final Logger LOGGER = Logger.getLogger(Server.class);
     private HttpServer httpServer;
     private Date startTime;
+    private static final String LOG_DIR = System.getProperty("jct.logDir");
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         new Server().start();
     }
 
@@ -55,6 +57,7 @@ public class Server {
         this.httpServer.createContext("/status/", createStatusHandler());
         this.httpServer.createContext("/purge/", createPurgeHandler());
         this.httpServer.createContext("/stacks/", createStackHandler());
+        this.httpServer.createContext("/dump/", createDumpHandler());
     }
 
     private int getPort() {
@@ -68,23 +71,18 @@ public class Server {
 
     private class Stats {
 
-        public final int uniqueStacks;
-        public final Date started;
-        public final long size;
-        public final Set<String> instrumentedMethods;
-        public final Set<String> instrumentedClasses;
-        public final int numberOfMethodsInstrumented;
-        public final int numberOfClassesInstrumented;
+        final int uniqueStacks;
+        final Date started;
+        final long size;
+        final int instrumentedMethodsCount;
+        final int instrumentedClassesCount;
 
-        private Stats(int uniqueStacks, Date started, long size, Set<String> instrumentedMethods, Set<String> instrumentedClasses) {
+        private Stats(int uniqueStacks, Date started, long size, int instrumentedMethodsCount, int instrumentedClassesCount) {
             this.uniqueStacks = uniqueStacks;
             this.started = started;
             this.size = size;
-            this.instrumentedMethods = instrumentedMethods;
-            this.instrumentedClasses = instrumentedClasses;
-            this.numberOfMethodsInstrumented = this.instrumentedMethods.size();
-            this.numberOfClassesInstrumented = this.instrumentedClasses.size();
-
+            this.instrumentedMethodsCount = instrumentedMethodsCount;
+            this.instrumentedClassesCount = instrumentedClassesCount;
         }
 
         @Override
@@ -94,32 +92,19 @@ public class Server {
                     "   \"uniqueStacks\":%d,\n" +
                     "   \"started\":\"%s\",\n" +
                     "   \"stackSizeInBytes\":%d,\n" +
+                    "   \"stackSizeInMBytes\":%d,\n" +
                     "   \"numberOfMethodsInstrumented\":%d,\n" +
                     "   \"numberOfClassesInstrumented\":%d\n" +
                     "}",
                 uniqueStacks,
                 started,
                 size,
-                numberOfMethodsInstrumented,
-                numberOfClassesInstrumented
+                (size / 1024 / 1024),
+                instrumentedMethodsCount,
+                instrumentedClassesCount
             );
         }
 
-    }
-
-    private int size(Map map) {
-        try {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ObjectOutputStream oos = new ObjectOutputStream(baos);
-            oos.writeObject(map);
-            oos.close();
-            int size = baos.size();
-            oos = null;
-            baos = null;
-            return size;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     private void addNoCache(HttpExchange exchange) {
@@ -135,12 +120,12 @@ public class Server {
     }
 
     private HttpHandler createStackHandler() {
-        return  new HttpHandler() {
+        return new HttpHandler() {
             public void handle(HttpExchange exchange) throws IOException {
                 addNoCache(exchange);
                 addText(exchange);
                 exchange.sendResponseHeaders(200, 0);
-                Map<String, Integer> collectedStacks = Collector.getCollectedStacks();
+                Map<String, Integer> collectedStacks = InMemoryCountingCollector.getCollectedStacks();
 
                 StringBuilder sb = new StringBuilder();
 
@@ -155,17 +140,46 @@ public class Server {
         };
     }
 
+    private HttpHandler createDumpHandler() {
+        return new HttpHandler() {
+            public void handle(HttpExchange exchange) throws IOException {
+                addNoCache(exchange);
+                addText(exchange);
+                exchange.sendResponseHeaders(201, 0);
+                Map<String, Integer> collectedStacks = InMemoryCountingCollector.getCollectedStacks();
+
+                String file = new SimpleDateFormat("yyyy_dd_MM_HHmmss").format(new Date());
+                String outFilename = String.format(LOG_DIR + "/jct_%s.txt", file);
+
+                FileWriter writer = null;
+
+                Map<String, Integer> sortedByCount = MapUtil.sortByValue(collectedStacks);
+                try {
+                    writer = new FileWriter(outFilename);
+                    for (String stack : sortedByCount.keySet()) {
+                        writer.write(sortedByCount.get(stack) + "x\n" + stack + "\n");
+                        writer.write("---------------------------------------------------------------- \n");
+                    }
+                } finally {
+                    writer.flush();
+                    writer.close();
+                }
+
+                exchange.getResponseBody().write((String.format("written to '%s' consider purging now to free memory ...", outFilename)).getBytes("UTF-8"));
+                exchange.close();
+            }
+        };
+    }
+
     private HttpHandler createStatusHandler() {
         return new HttpHandler() {
             public void handle(HttpExchange exchange) throws IOException {
                 addNoCache(exchange);
                 addJson(exchange);
                 exchange.sendResponseHeaders(200, 0);
-                Map<String, Integer> collectedStacks = Collector.getCollectedStacks();
+                Map<String, Integer> collectedStacks = InMemoryCountingCollector.getCollectedStacks();
 
-                Set<String> instrumentedMethods = Statistics.getInstrumentedMethods();
-                Set<String> instrumentedClasses = Statistics.getInstrumentedClasses();
-                Stats stats = new Stats(collectedStacks.size(), startTime, size(collectedStacks), instrumentedMethods, instrumentedClasses);
+                Stats stats = new Stats(collectedStacks.size(), startTime, MapUtil.approximateSizeInBytes(collectedStacks), Statistics.getInstrumentedMethodsCount(), Statistics.getInstrumentedClassesCount());
 
                 exchange.getResponseBody().write(stats.toString().getBytes("UTF-8"));
                 exchange.close();
@@ -180,14 +194,15 @@ public class Server {
                 addNoCache(exchange);
                 addText(exchange);
                 exchange.sendResponseHeaders(200, 0);
-                Collector.purgeCollectedStacks();
+                InMemoryCountingCollector.purgeCollectedStacks();
                 exchange.getResponseBody().write("purged".getBytes("UTF-8"));
                 exchange.close();
+                LOGGER.info("successfully purged");
             }
         };
     }
 
-    public void stop() {
+    private void stop() {
         this.httpServer.stop(0);
     }
 

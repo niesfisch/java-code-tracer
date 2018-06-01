@@ -7,8 +7,8 @@ import java.util.Set;
  * @author msauer
  */
 public class Classes {
-    public Set<String> included = new HashSet<String>();
-    public Set<String> excluded = new HashSet<String>();
+    public Set<String> included = new HashSet<>();
+    public Set<String> excluded = new HashSet<>();
 
     @Override
     public String toString() {

@@ -10,12 +10,12 @@ import de.marcelsauer.profiler.config.Config;
 public class CombinedFilterTest {
 
     private Config config = new Config();
-    private Filter combinedFilter = new CombinedFilter(config);
+    private Filter filter = new CombinedFilter(config);
 
     @Test
     public void thatInvalidArgumentsDoNotMatch() {
-        assertFalse(combinedFilter.matches(null));
-        assertFalse(combinedFilter.matches(""));
+        assertFalse(filter.matches(null));
+        assertFalse(filter.matches(""));
     }
 
     @Test
@@ -24,7 +24,7 @@ public class CombinedFilterTest {
         config.classes.included.add(".*");
 
         // when
-        assertTrue(combinedFilter.matches("a.b.C"));
+        assertTrue(filter.matches("a.b.C"));
     }
 
     @Test
@@ -34,7 +34,7 @@ public class CombinedFilterTest {
         config.classes.excluded.add("a.b.C");
 
         // when
-        assertFalse(combinedFilter.matches("a.b.C"));
+        assertFalse(filter.matches("a.b.C"));
     }
 
     @Test
@@ -44,7 +44,7 @@ public class CombinedFilterTest {
         config.classes.excluded.add(".*");
 
         // when
-        assertFalse(combinedFilter.matches("a.b.C"));
+        assertFalse(filter.matches("a.b.C"));
     }
 
     @Test
@@ -54,8 +54,8 @@ public class CombinedFilterTest {
         config.classes.excluded.add(".*");
 
         // when
-        assertFalse(combinedFilter.matches("a"));
-        assertFalse(combinedFilter.matches("a.b.C"));
+        assertFalse(filter.matches("a"));
+        assertFalse(filter.matches("a.b.C"));
     }
 
 

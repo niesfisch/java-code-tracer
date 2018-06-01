@@ -22,8 +22,10 @@ the config file is the place where you configure which classes and packages of y
 
 ```bash
 mkdir ${HOME}/.jct/
-cp config-sample.yaml ${HOME}/.jct/
+cp doc/config-sample-file.yaml ${HOME}/.jct/
 ```
+
+the recorded stacks will be save to the folder specified in the config file.
 
 ## built the agent jar that will be used
 
@@ -34,36 +36,51 @@ ls -al ./target/
 
 ## start application with agent
 
-(multiline here for better visibility, put everything on one line or escape the linebreaks ;-))
-
 ```bash
+# (multiline for readability)
 java -jar someApplication.jar
   -javaagent:"/path_to/target/java-code-tracer-1.0-SNAPSHOT-jar-with-dependencies.jar"
   -Djct.loglevel=INFO
-  -Djct.config=${HOME}/.jct/config-sample.yaml (optional, default is under /src/main/resources/META-INF/config.yaml, will be merged)
-  -Djct.tracer.server.port=9002 (default=9001)
+  -Djct.config=${HOME}/.jct/config-sample-file.yaml (optional, default is under /src/main/resources/META-INF/config.yaml, will be merged)
   -Djct.logDir=/tmp/jct
   -noverify (needed for the moment)
 ```
- 
-## Server with collected information
 
-when the instrumented app starts a background http server will be started that you can connect to
+## Output Processor(s))
 
-```bash
-curl localhost:[port]
-   /status/
-   /stacks/
-   /purge/
+there are multiple ways to handle the captured data. the following processor are currently available:
+
+- **AsyncFileWritingStackProcessor**, writes stacks to dedicated files (see [config.yaml](src/test/resources/integration/test-config-asyncfile.yaml))
+- **AsyncUdpStackProcessor**, sends each stack to configured UDP port for further processing (see [config.yaml](src/test/resources/integration/test-config-asyncfile.yaml))
+
+see further down for a fullblown hello world example.
+
+## Message Format
+
+```json
+{
+    "stack": [
+        "de.marcelsauer.helloworld.subA.InSubA.a_1()",
+        "de.marcelsauer.helloworld.subA.InSubA_InnerClass.a_inner_1()",
+        "de.marcelsauer.helloworld.subA.InSubA_InnerClass.a_inner_2()",
+        "de.marcelsauer.helloworld.subA.InSubA_InnerClass.a_inner_2()"
+    ],
+    "timestampMillis": "1528120883697"
+}
 ```
- 
+
+```
+timestampMillis: timestamp milliseconds the first stack entry was started
+stack: all captured stack elements during the call, where stack[0] is the entry and stack[n] is the end 
+```
+
 ## Logging
 
-Logfile can be found under /tmp/jct/jct_agent.log
+Files can be found in `jct.logDir`
+ 
+## Debugging
 
-# Debugging
-
-if you need more information about what will be instrumented etc. tune the loglevel
+if you need more information about what will be instrumented etc. tune the loglevel. 
 
 ```bash
 -Djct.loglevel=DEBUG
@@ -77,61 +94,91 @@ JCT uses byte code instrumentation. it "magically" weaves tracing information in
 
 ## Example Hello World walkthrough
 
-In this walkthrough you will start a simple loop that prints "Hello World ..." to the console. the program will be instrumtented with JCT and some data will be collected. here is a screenshot of the program.
-
-	1. config you will use
-	2. simple loop that calls some methods on other classes
-	3. sample class calling anohter
-	4. sample class calling anohter
-	5. server with status api
-	6. server with stack api
+In this walkthrough you will start a simple loop that prints "Hello World ..." to the console. the program will be instrumtented with JCT and some data will be collected.
 
 hint: we explicitly excluded the "HelloWorldLoop" in the config otherwise we would never get results as the loop never leaves and JCT never reaches the end of the stack.
-
-files we will use for demo purposes
-
-[config-sample.yaml](doc/config-sample.yaml)
-
-[helloworld-loop.jar](doc/helloworld-loop.jar)
-
-![Hello World Sample](doc/helloworldloop_overview.png)
 
 now it's time to start it locally ... 
 
 ```bash
 # produce jar with agent
 mvn clean package
-# start hello world jar with agent attached to it
-java -Djct.loglevel=INFO -Djct.config=./doc/config-sample.yaml -Djct.tracer.server.port=9001 -Djct.logDir=/tmp/jct2 -noverify -javaagent:"${PWD}/target/java-code-tracer-1.0-SNAPSHOT-jar-with-dependencies.jar" -jar "${PWD}/doc/helloworld-loop.jar"
+# start hello world jar with agent attached to it, (multiline for readability)
+java -javaagent:"${PWD}/target/java-code-tracer-1.0-SNAPSHOT-jar-with-dependencies.jar"
+	 -Djct.loglevel=INFO 	  
+	 -Djct.config=./doc/config-sample-helloworld.yaml
+	 -Djct.logDir=/tmp/jct -noverify 
+	 -jar "${PWD}/doc/helloworld-loop.jar"
 ```
 
 you should see "Hello World .." printed to the console multiple times. 
 
 open another tab ... 
 
-... check the logs ...
+check the logs ...
 
 ```bash
 cat /tmp/jct/jct_agent.log
 ```
 
-... and check if you can query the server
+every x seconds the collected stacks will be dumped to a file. you need to aggregate these files yourself however you see fit.
 
 ```bash
-curl http://localhost:9001/status/
-curl http://localhost:9001/stacks/
-curl http://localhost:9001/purge/
+cat /tmp/stacks/jct_xxxx_xx_xx_xxxxxx_xxx.log
+
+{"timestampMillis" : "1528120452903", "stack" : ["de.marcelsauer.helloworld.subA.InSubA.a_1()","de.marcelsauer.helloworld.subA.InSubA_InnerClass.a_inner_1()","de.marcelsauer.helloworld.subA.InSubA_InnerClass.a_inner_2()","de.marcelsauer.helloworld.subA.InSubA_InnerClass.a_inner_2()"]}
+{"timestampMillis" : "1528120452903", "stack" : ["de.marcelsauer.helloworld.subA.InSubA.a_2()"]}
+{"timestampMillis" : "1528120452903", "stack" : ["de.marcelsauer.helloworld.subB.InSubB.b_1()","de.marcelsauer.helloworld.subB.InSubB_InnerClass.b_inner_1()","de.marcelsauer.helloworld.subB.InSubB_InnerClass.b_inner_2()","de.marcelsauer.helloworld.subB.InSubB_InnerClass.b_inner_2()"]}
+{"timestampMillis" : "1528120452903", "stack" : ["de.marcelsauer.helloworld.subB.InSubB.b_2()","de.marcelsauer.helloworld.subB.InSubB_InnerClass.b_inner_1()","de.marcelsauer.helloworld.subB.InSubB_InnerClass.b_inner_2()","de.marcelsauer.helloworld.subB.InSubB_InnerClass.b_inner_2()"]}
 ```
+
+you could use some simple aggregation like this
+
+```bash
+cd /tmp/stacks/
+for file in `find . -name "jct*"`; do cat $file >> all.log; done
+cat all.log | perl -pe 's/.*\[(.*)\].*/\1/' | sort | uniq -c
+
+   5 "de.marcelsauer.helloworld.subA.InSubA.a_1()","de.marcelsauer.helloworld.subA.InSubA_InnerClass.a_inner_1()","de.marcelsauer.helloworld.subA.InSubA_InnerClass.a_inner_2()","de.marcelsauer.helloworld.subA.InSubA_InnerClass.a_inner_2()"
+   5 "de.marcelsauer.helloworld.subA.InSubA.a_2()"
+   5 "de.marcelsauer.helloworld.subB.InSubB.b_1()","de.marcelsauer.helloworld.subB.InSubB_InnerClass.b_inner_1()","de.marcelsauer.helloworld.subB.InSubB_InnerClass.b_inner_2()","de.marcelsauer.helloworld.subB.InSubB_InnerClass.b_inner_2()"
+   5 "de.marcelsauer.helloworld.subB.InSubB.b_2()","de.marcelsauer.helloworld.subB.InSubB_InnerClass.b_inner_1()","de.marcelsauer.helloworld.subB.InSubB_InnerClass.b_inner_2()","de.marcelsauer.helloworld.subB.InSubB_InnerClass.b_inner_2()"
+
+```
+
+### JCT -> UDP -> Logstash -> Elasticsearch example
+
+here is a full example to use UDP + logstash + elasticsearch (assumes you have [logstash](https://www.elastic.co/de/downloads/logstash)/[docker](https://www.docker.com/community-edition#/download) on your machine and the UDP processor sends to port 9999)
+
+```bash
+
+# tab1, start logstash with out UDP input and elasticsearch output
+logstash -f doc/logstash.conf
+
+#tab2, start elasticsearch
+docker run -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:6.2.4
+
+#tab3 (multiline for readability), start helloworld loop that will send captured stacks to UDP->logstash->elastisearch
+java -javaagent:"${PWD}/target/java-code-tracer-1.0-SNAPSHOT-jar-with-dependencies.jar" 
+	 -Djct.loglevel=INFO 
+	 -Djct.config=./doc/config-sample-helloworld-udp.yaml 
+	 -Djct.logDir=/tmp/jct 
+	 -noverify 
+	 -jar "${PWD}/doc/helloworld-loop.jar"
+
+# query captured data
+curl -XGET http://127.0.0.1:9200/jct_stacks/_search
+```
+
+# Similar Projects/Ideas
+
+- [Datadog dd-trace-java](https://github.com/DataDog/dd-trace-java/)
+- [NewRelic](https://newrelic.com/)
+- [Call Graph](https://github.com/gousiosg/java-callgraph)
 
 # ToDos, Ideas
 
-- do not keep in memory, dump somewhere
-- stream events somewhere for processing
-- create proper frontend for collected traces
-- check/improve performance implications
-- check/improve threading issues
-- max/minpaths count (prevent heap overflow)
-- collect largest min/max-n paths
+- use proper dependency injection instead of static calls
 
 # License
 

@@ -9,5 +9,9 @@ public class A implements InterfaceA {
 
     public void a() {
         b.b();
+        b.b();
+        b.b();
+        b.b();
+        b.b();
     }
 }

@@ -8,14 +8,14 @@ import java.util.Set;
 
 import org.junit.Test;
 
-public class GenericFilterTest {
-    private Set<String> config = new HashSet<String>();
-    private Filter genericFilter = new GenericFilter(config);
+public class RegexFilterTest {
+    private Set<String> config = new HashSet<>();
+    private Filter filter = new RegexFilter(config);
 
     @Test
     public void thatInvalidArgumentsNotBeInstrumented() {
-        assertFalse(genericFilter.matches(null));
-        assertFalse(genericFilter.matches(""));
+        assertFalse(filter.matches(null));
+        assertFalse(filter.matches(""));
     }
 
     @Test
@@ -25,8 +25,8 @@ public class GenericFilterTest {
         config.add("d.*");
 
         // when
-        assertTrue(genericFilter.matches("a.b.C"));
-        assertTrue(genericFilter.matches("d.1.2.D"));
+        assertTrue(filter.matches("a.b.C"));
+        assertTrue(filter.matches("d.1.2.D"));
     }
 
     @Test
@@ -35,9 +35,9 @@ public class GenericFilterTest {
         config.add(".*");
 
         // when
-        assertTrue(genericFilter.matches("a"));
-        assertTrue(genericFilter.matches("a.b"));
-        assertTrue(genericFilter.matches("a.b.C"));
+        assertTrue(filter.matches("a"));
+        assertTrue(filter.matches("a.b"));
+        assertTrue(filter.matches("a.b.C"));
     }
 
 

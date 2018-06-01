@@ -15,6 +15,12 @@ public class B {
     public void b() {
         subClass.subclassMethod();
         collaborator1.collaborator1Method();
+        collaborator1.collaborator1Method();
+        collaborator1.collaborator1Method();
+        collaborator1.collaborator1Method();
+        collaborator2.collaborator2Method();
+        collaborator2.collaborator2Method();
+        collaborator2.collaborator2Method();
         collaborator2.collaborator2Method();
 
     }

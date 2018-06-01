@@ -1,0 +1,9 @@
+# some comment
+classes:
+    included:
+        - ^.*hell.*
+    excluded:
+        - .*HelloWorldLoop.*
+processor:
+    fullQualifiedClass: de.marcelsauer.profiler.processor.file.AsyncFileWritingStackProcessor
+    stackFolderName: /tmp/stacks/

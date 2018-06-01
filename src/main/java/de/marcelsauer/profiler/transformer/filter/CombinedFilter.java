@@ -5,13 +5,13 @@ import de.marcelsauer.profiler.config.Config;
 public class CombinedFilter implements Filter {
 
     private final Config config;
-    private final GenericFilter inclusionFilter;
-    private final GenericFilter exclusionFilter;
+    private final RegexFilter inclusionFilter;
+    private final RegexFilter exclusionFilter;
 
     public CombinedFilter(Config config) {
         this.config = config;
-        this.inclusionFilter = new GenericFilter(config.classes.included);
-        this.exclusionFilter = new GenericFilter(config.classes.excluded);
+        this.inclusionFilter = new RegexFilter(config.classes.included);
+        this.exclusionFilter = new RegexFilter(config.classes.excluded);
     }
 
     public boolean matches(String fqClassName) {

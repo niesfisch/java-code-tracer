@@ -5,11 +5,11 @@ import java.util.Set;
 /**
  * @author msauer
  */
-public class GenericFilter implements Filter {
+public class RegexFilter implements Filter {
 
     private final Set<String> config;
 
-    public GenericFilter(Set<String> config) {
+    public RegexFilter(Set<String> config) {
         this.config = config;
     }
 

@@ -5,7 +5,7 @@ import java.lang.instrument.Instrumentation;
 import org.apache.log4j.Logger;
 
 import de.marcelsauer.profiler.config.Config;
-import de.marcelsauer.profiler.server.Server;
+import de.marcelsauer.profiler.processor.inmemory.server.Server;
 import de.marcelsauer.profiler.transformer.Transformer;
 
 /**
@@ -22,9 +22,10 @@ import de.marcelsauer.profiler.transformer.Transformer;
 public class Agent {
 
     private static final Logger logger = Logger.getLogger(Agent.class);
-    private static final String DEFAULT_CONFIG_FILE = "META-INF/config.yaml";
 
-    public static void agentmain(String args, Instrumentation inst) throws Exception {
+    public static Instrumentation INSTRUMENTATION;
+
+    public static void agentmain(String args, Instrumentation inst) {
         init(inst);
     }
 
@@ -33,30 +34,11 @@ public class Agent {
     }
 
     private static void init(Instrumentation inst) {
+        INSTRUMENTATION = inst;
+
         logger.info("registering instrumentation transformer");
-        inst.addTransformer(new Transformer(buildConfig()));
-        new Server().start();
+        inst.addTransformer(new Transformer(Config.get()));
+
+        // new Server().start();
     }
-
-    private static Config buildConfig() {
-        Config config = Config.createDefaultFromYamlFile(DEFAULT_CONFIG_FILE);
-        logger.info("using default config: " + config);
-
-        String yamlFile = System.getProperty("jct.config");
-        if (yamlFile != null && !"".equals(yamlFile.trim())) {
-            Config customConf = Config.createCustomFromYamlFile(yamlFile);
-            if (customConf.isInclusionConfigured()) {
-                ignoreDefaultInclusion(config);
-            }
-            logger.info(String.format("using custom config from file '%s' with config '%s'", yamlFile, customConf));
-            config.merge(customConf);
-        }
-        logger.info("merged config config" + config);
-        return config;
-    }
-
-    private static void ignoreDefaultInclusion(Config config) {
-        config.classes.included.clear();
-    }
-
 }
