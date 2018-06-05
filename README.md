@@ -51,7 +51,7 @@ java -jar someApplication.jar
 there are multiple ways to handle the captured data. the following processor are currently available:
 
 - **AsyncFileWritingStackProcessor**, writes stacks to dedicated files (see [config.yaml](src/test/resources/integration/test-config-asyncfile.yaml))
-- **AsyncUdpStackProcessor**, sends each stack to configured UDP port for further processing (see [config.yaml](src/test/resources/integration/test-config-asyncfile.yaml))
+- **AsyncUdpStackProcessor**, sends each stack to configured UDP port for further processing (see [config.yaml](src/test/resources/integration/test-config-asyncudp.yaml))
 
 see further down for a fullblown hello world example.
 
