@@ -16,7 +16,7 @@ import integration.package1.B;
 /**
  * assumes you've build the project via <pre>mvn clean package</pre> so that ./target/ contains the agent jar
  */
-abstract class  AbtractAsyncIntegrationTest {
+abstract class AbtractAsyncIntegrationTest {
 
     @Test
     public void thatAsyncProcessorWorks() throws Exception {
@@ -63,7 +63,7 @@ abstract class  AbtractAsyncIntegrationTest {
             public boolean isTrue() {
                 return expectedStackCount == AbstractAsyncStackProcessor.getSuccessfullyProcessedStacksCounter();
             }
-        }, expectedStackCount).go();
+        }, expectedStackCount * 3).go();
 
         // give some more time ...
         Thread.sleep(2000);

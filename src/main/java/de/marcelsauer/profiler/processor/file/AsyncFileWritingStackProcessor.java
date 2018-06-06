@@ -16,7 +16,7 @@ import de.marcelsauer.profiler.processor.AbstractAsyncStackProcessor;
 import de.marcelsauer.profiler.processor.RecordingEvent;
 
 /**
- * writes data to configured fiel
+ * writes data to configured file
  */
 public class AsyncFileWritingStackProcessor extends AbstractAsyncStackProcessor {
 

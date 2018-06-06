@@ -28,6 +28,19 @@ public class StackProcessorFactory {
         logger.info("using stack processor of type: " + stackProcessor.getClass().getName());
 
         stackProcessor.start();
+
+        addShutdownHook();
+
         return stackProcessor;
+    }
+
+    private static void addShutdownHook() {
+        Runtime.getRuntime().addShutdownHook(new Thread("jca-shutdown-thread") {
+            @Override
+            public void run() {
+                logger.info("shutting down jca processor " + stackProcessor.getClass().getName());
+                stackProcessor.stop();
+            }
+        });
     }
 }

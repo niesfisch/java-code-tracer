@@ -59,7 +59,6 @@ public abstract class AbstractAsyncStackProcessor implements StackProcessor {
     @Override
     public void start() {
         logger.info("starting " + this.getClass().getName());
-        addShutdownHook();
         startScheduler();
         doStart();
     }
@@ -90,15 +89,6 @@ public abstract class AbstractAsyncStackProcessor implements StackProcessor {
 
     public static int getSuccessfullyProcessedStacksCounter() {
         return successfullyProcessedStacksCounter.intValue();
-    }
-
-    private void addShutdownHook() {
-        Runtime.getRuntime().addShutdownHook(new Thread("jca-writer-shutdown-thread") {
-            @Override
-            public void run() {
-                AbstractAsyncStackProcessor.this.stop();
-            }
-        });
     }
 
     private void startScheduler() {
