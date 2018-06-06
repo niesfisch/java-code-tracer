@@ -5,7 +5,7 @@ import de.marcelsauer.profiler.processor.StackProcessor;
 
 public class InMemoryStackProcessor implements StackProcessor {
     public void process(RecordingEvent event) {
-        InMemoryCountingCollector.increment(event.asJson());
+        InMemoryCountingCollector.increment(event.stack.toString());
     }
 
     @Override

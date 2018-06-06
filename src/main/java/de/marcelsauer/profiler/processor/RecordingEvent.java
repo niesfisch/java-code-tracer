@@ -6,8 +6,8 @@ import java.util.Date;
 import java.util.List;
 
 public class RecordingEvent {
-    final Stack stack;
-    final long timestampMillis;
+    public final Stack stack;
+    public final long timestampMillis;
 
     public RecordingEvent(Stack stack) {
         this.stack = stack;

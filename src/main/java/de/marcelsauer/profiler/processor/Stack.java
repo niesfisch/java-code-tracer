@@ -39,4 +39,9 @@ public class Stack {
                 '}';
         }
     }
+
+    @Override
+    public String toString() {
+        return stackEntries.toString();
+    }
 }

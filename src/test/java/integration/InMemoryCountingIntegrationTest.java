@@ -9,10 +9,10 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Collection;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import de.marcelsauer.profiler.processor.inmemory.InMemoryCountingCollector;
+import de.marcelsauer.profiler.recorder.Statistics;
 import integration.package1.A;
 import integration.package1.B;
 
@@ -21,8 +21,7 @@ import integration.package1.B;
  *
  * @author msauer
  */
-@Ignore
-public class IntegrationTest {
+public class InMemoryCountingIntegrationTest {
 
     private static final String JAR_FILE_PATH = "./target/java-code-tracer-1.0-SNAPSHOT-jar-with-dependencies.jar";
 
@@ -49,17 +48,18 @@ public class IntegrationTest {
 
         //String response = getRequest("http://localhost:9001/status/");
 
-        //Thread.sleep(10000000);
+        //Thread.sleep(2000);
 //         meanwhile ....
         // curl localhost:9001/status/
         // curl localhost:9001/purge/
 
         // then
 //        assertTrue(response.contains("uniqueStacks"));
+        assertEquals(11, Statistics.getInstrumentedClassesCount());
+        assertEquals(14, Statistics.getInstrumentedMethodsCount());
         assertEquals(2, InMemoryCountingCollector.getCollectedStacks().size());
 
         Collection<Integer> values = InMemoryCountingCollector.getCollectedStacks().values();
-        assertTrue(values.contains(3));
         assertTrue(values.contains(3));
         assertEquals(6, CountingInMemoryStackProcessor.count);
     }
