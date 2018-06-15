@@ -1,6 +1,6 @@
 package de.marcelsauer.profiler.recorder;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
@@ -48,7 +48,7 @@ public class RecorderTest {
         Recorder.stop();
 
         String next = InMemoryCountingCollector.getCollectedStacks().keySet().iterator().next();
-        assertTrue(next.matches("\\{\"timestampMillis\" : \".*\", \"stack\" : \\[\"method_1\",\"method_A\",\"method_A_A\",\"method_A_A\",\"method_A_A\",\"method_A_A_A\",\"method_A_A\",\"method_A\",\"method_A\",\"method_A\",\"method_B\",\"method_B\",\"method_B\",\"method_B\"\\]\\}"));
+        assertEquals("[StackEntry{methodName='method_1'}, StackEntry{methodName='method_A'}, StackEntry{methodName='method_A_A'}, StackEntry{methodName='method_A_A'}, StackEntry{methodName='method_A_A'}, StackEntry{methodName='method_A_A_A'}, StackEntry{methodName='method_A_A'}, StackEntry{methodName='method_A'}, StackEntry{methodName='method_A'}, StackEntry{methodName='method_A'}, StackEntry{methodName='method_B'}, StackEntry{methodName='method_B'}, StackEntry{methodName='method_B'}, StackEntry{methodName='method_B'}]", next);
 
     }
 
