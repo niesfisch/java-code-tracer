@@ -18,9 +18,9 @@ Usage:
 Output example:
    #   package                               class                           method
   ───────────────────────────────────────────────────────────────────────────────────
-   1   o.b.s.u.ldap                          LdapConnectionFactory         .inititialize(LdapConnectionConfigurationDTO)
+   1   de.a.security.utils.ldap          LdapConnectionFactory         .inititialize(LdapConnectionConfigurationDTO)
    2                                                                        .connect()
-   3   o.b.s.u.ldap                          LdapConnectionConfigurationDTO .getLdapServer1()
+   3   de.b.security.utils.ldap          LdapConnectionConfigurationDTO .getLdapServer1()
   ...
 """
 
@@ -93,16 +93,13 @@ def split_entry(entry: str) -> tuple[str, str, str, str]:
 # ---------------------------------------------------------------------------
 
 def abbreviate_pkg(pkg: str) -> str:
-    """'otto.b2b.security.utils.ldap' -> 'o.b.s.u.ldap'"""
-    parts = pkg.split(".")
-    if len(parts) <= 2:
-        return pkg
-    return ".".join(p[0] for p in parts[:-1]) + "." + parts[-1]
+    """Return the package as-is — full names are easier to read than abbreviations."""
+    return pkg
 
 
 def shorten_args(raw_args: str) -> str:
     """'(a.b.c.Foo, x.y.Bar)' -> '(Foo, Bar)'"""
-    return re.sub(r"[\w]+\.(\w+)", r"\1", raw_args)
+    return re.sub(r"(?:\w+\.)+(\w+)", r"\1", raw_args)
 
 
 # ---------------------------------------------------------------------------

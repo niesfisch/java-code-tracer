@@ -10,7 +10,7 @@ Example event shape:
 {
   "timestampMillis": "1773395676972",
   "stack": [
-    "de.otto.droporder.cockpit.model.DlqStorageModel.payloadHash()"
+    "some.package.a.b.model.DlqStorageModel.payloadHash()"
   ]
 }
 ```
@@ -28,7 +28,7 @@ Example event shape:
 
 ## What you can answer with this guide
 
-- Which events contain class `de.otto.droporder.cockpit.model.DlqStorageModel`?
+- Which events contain class `some.package.a.b.model.DlqStorageModel`?
 - How often was that class hit over time?
 - Which methods are called most often?
 - Which classes/methods are hot overall?
@@ -215,7 +215,7 @@ GET tcp-events-*/_search
   "query": {
     "wildcard": {
       "stack.keyword": {
-        "value": "de.otto.droporder.cockpit.model.DlqStorageModel*"
+        "value": "some.package.a.b.model.DlqStorageModel*"
       }
     }
   }
@@ -229,7 +229,7 @@ GET tcp-events-*/_search
   "query": {
     "wildcard": {
       "stack.keyword": {
-        "value": "de.otto.droporder.cockpit.model.DlqStorageModel*"
+        "value": "some.package.a.b.model.DlqStorageModel*"
       }
     }
   },
@@ -251,7 +251,7 @@ GET tcp-events-*/_search
 
 1. Open Visualization Library -> Create New -> Lens with data view `jct-events-*`.
 2. Filter (KQL):
-   `stack.keyword : "de.otto.droporder.cockpit.model.DlqStorageModel*"`
+   `stack.keyword : "some.package.a.b.model.DlqStorageModel*"`
 3. X-axis: Date histogram on `@timestamp`.
 4. Y-axis: Count.
 5. Save as `DlqStorageModel calls over time`.
