@@ -15,6 +15,17 @@ Example event shape:
 }
 ```
 
+## Table of Contents
+
+- [What you can answer with this guide](#what-you-can-answer-with-this-guide)
+- [Transport note (UDP vs TCP)](#transport-note-udp-vs-tcp)
+- [1) First check your mapping (important)](#1-first-check-your-mapping-important)
+- [2) Quick filtering in Discover (KQL)](#2-quick-filtering-in-discover-kql)
+- [3) Elasticsearch queries you can copy](#3-elasticsearch-queries-you-can-copy)
+- [4) Kibana visualizations (Lens)](#4-kibana-visualizations-lens)
+- [5) Common pitfalls](#5-common-pitfalls)
+- [6) Fast workflow recommendation](#6-fast-workflow-recommendation)
+
 ## What you can answer with this guide
 
 - Which events contain class `de.otto.droporder.cockpit.model.DlqStorageModel`?
@@ -60,7 +71,7 @@ stack:de.a.b.c.controller.SomeController.someMethod*
 The examples below use `jct-events-*` because that is what the current Logstash config writes.
 If you route TCP to `tcp-events-*`, just replace the index name.
 
-### A) Show latest documents that contain the class
+### Show latest documents that contain the class
 
 ```http
 GET jct-events-*/_search
