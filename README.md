@@ -31,7 +31,18 @@ It helps answer one practical question in large systems: "Is this code path stil
 
 For local experimentation, the recommended setup is:
 
-- JCT -> UDP -> Logstash -> Elasticsearch -> Kibana
+```
+  -javaagent:jct.jar          Docker Compose
+  ┌─────────────────┐     ┌───────────────────────────────────┐
+  │   JCT Agent     │     │  Logstash :9999                   │
+  │   Recorder      │────▶│    │                              │
+  │   Stack         │     │    ▼                              │
+  │   Processor     │     │  Elasticsearch  (jct-events-*)    │
+  │  UDP / TCP      │     │    │                              │
+  └─────────────────┘     │    ▼                              │
+                          │  Kibana :5601                     │
+                          └───────────────────────────────────┘
+```
 
 This gives you a fast feedback loop with searchable traces and a UI for exploration.
 
