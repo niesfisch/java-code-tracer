@@ -1,13 +1,13 @@
 package de.marcelsauer.profiler.config;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Set;
-
 import org.apache.log4j.Logger;
 import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.constructor.Constructor;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Set;
 
 /**
  * yaml bean
@@ -39,37 +39,48 @@ public class Config {
     }
 
     static Config initDefaultFromYamlFile() {
-        Yaml yaml = new Yaml(new Constructor(Config.class));
-        Config config = (Config) yaml.load(FileUtils.getLocalResource(DEFAULT_CONFIG_FILE));
+        Config config = loadConfigFromString(FileUtils.getLocalResource(DEFAULT_CONFIG_FILE));
         logger.info("using default config: " + config);
         return config;
     }
 
     static Config loadCustomFromYamlFile() {
         String yamlFile = System.getProperty("jct.config");
-        if (yamlFile != null && !"".equals(yamlFile.trim())) {
-
-            Yaml yaml = new Yaml(new Constructor(Config.class));
-            Config configFromCustomFile = null;
+        if (yamlFile != null && !yamlFile.trim().isEmpty()) {
             try {
-                InputStream result = new FileInputStream(yamlFile);
-                configFromCustomFile = (Config) yaml.load(result);
+                InputStream result = Files.newInputStream(Paths.get(yamlFile));
+                Config configFromCustomFile = loadConfigFromInputStream(result);
+                logger.info(String.format("using custom config from file '%s' with config '%s'", yamlFile, configFromCustomFile));
+                return configFromCustomFile;
             } catch (IOException e) {
                 throw new RuntimeException("could not load " + yamlFile);
             }
-
-            logger.info(String.format("using custom config from file '%s' with config '%s'", yamlFile, configFromCustomFile));
-            return configFromCustomFile;
         }
         return null;
+    }
+
+    private static Config loadConfigFromString(String yamlData) {
+        return new Yaml().loadAs(yamlData, Config.class);
+    }
+
+    private static Config loadConfigFromInputStream(InputStream inputStream) {
+        try {
+            return new Yaml().loadAs(inputStream, Config.class);
+        } finally {
+            try {
+                inputStream.close();
+            } catch (IOException ignored) {
+                logger.warn("failed to close config input stream", ignored);
+            }
+        }
     }
 
     @Override
     public String toString() {
         return "Config{" +
-            "classes=" + classes +
-            ", recorder=" + recorder +
-            '}';
+               "classes=" + classes +
+               ", recorder=" + recorder +
+               '}';
     }
 
     private void merge(Config otherConfig) {

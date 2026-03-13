@@ -1,0 +1,13 @@
+# some comment
+classes:
+    included:
+        - ^.*hell.*
+    excluded:
+        - .*HelloWorldLoop.*
+processor:
+    fullQualifiedClass: de.marcelsauer.profiler.processor.tcp.AsyncTcpStackProcessor
+    tcpHost: localhost
+    tcpPort: 9999
+    tcpConnectTimeoutMillis: 1000
+    tcpReconnectDelayMillis: 1000
+

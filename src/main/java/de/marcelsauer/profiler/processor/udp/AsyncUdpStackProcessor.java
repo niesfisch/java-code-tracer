@@ -1,18 +1,14 @@
 package de.marcelsauer.profiler.processor.udp;
 
-import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
-import java.net.UnknownHostException;
-import java.util.Collection;
-
-import org.apache.log4j.Logger;
-
 import de.marcelsauer.profiler.config.Config;
 import de.marcelsauer.profiler.processor.AbstractAsyncStackProcessor;
 import de.marcelsauer.profiler.processor.RecordingEvent;
+import org.apache.log4j.Logger;
+
+import java.io.IOException;
+import java.net.*;
+import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 
 /**
  * sends data to configured udp socket
@@ -32,7 +28,9 @@ public class AsyncUdpStackProcessor extends AbstractAsyncStackProcessor {
 
     @Override
     protected void doStop() {
-        socket.close();
+        if (socket != null) {
+            socket.close();
+        }
     }
 
     @Override
@@ -41,12 +39,12 @@ public class AsyncUdpStackProcessor extends AbstractAsyncStackProcessor {
             String json = event.asJson();
             byte[] buf = new byte[0];
             try {
-                buf = json.getBytes("UTF-8");
+                buf = json.getBytes(StandardCharsets.UTF_8);
                 DatagramPacket packet = new DatagramPacket(buf, buf.length, address, Config.get().processor.udpPort);
                 socket.send(packet);
             } catch (IOException e) {
-                // UDP has max length of 64k message ...
-                throw new RuntimeException("could not send message. discarding. length was: " + buf.length, e);
+                // UDP has max length of 64k message ... we discard this message and keep going
+                logger.warn("could not send message. discarding. length was: " + buf.length + " json: " + json);
             }
         }
     }

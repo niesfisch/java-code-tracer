@@ -1,16 +1,15 @@
 package de.marcelsauer.profiler.processor;
 
-import org.apache.log4j.Logger;
-
 import de.marcelsauer.profiler.config.Config;
 import de.marcelsauer.profiler.processor.inmemory.InMemoryStackProcessor;
 import de.marcelsauer.profiler.util.Util;
+import org.apache.log4j.Logger;
 
 public class StackProcessorFactory {
     private static final Logger logger = Logger.getLogger(StackProcessorFactory.class);
     private static StackProcessor stackProcessor;
 
-    public static StackProcessor getStackProcessor() {
+    public static synchronized StackProcessor getStackProcessor() {
         if (stackProcessor != null) {
             return stackProcessor;
         }
@@ -20,9 +19,9 @@ public class StackProcessorFactory {
         } else {
             try {
                 Class<?> pr = Class.forName(processor);
-                stackProcessor = (StackProcessor) pr.newInstance();
+                stackProcessor = (StackProcessor) pr.getDeclaredConstructor().newInstance();
             } catch (Exception e) {
-                throw new IllegalStateException("could not create stack processor " + stackProcessor, e);
+                throw new IllegalStateException("could not create stack processor " + processor, e);
             }
         }
         logger.info("using stack processor of type: " + stackProcessor.getClass().getName());

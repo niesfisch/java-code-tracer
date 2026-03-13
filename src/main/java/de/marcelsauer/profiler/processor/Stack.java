@@ -1,6 +1,5 @@
 package de.marcelsauer.profiler.processor;
 
-import java.util.Date;
 import java.util.List;
 
 public class Stack {
@@ -21,7 +20,7 @@ public class Stack {
             this.methodName = methodName;
             this.startNanos = startNanos;
             this.level = level;
-            this.timestampMillis = new Date().getTime();
+            this.timestampMillis = System.currentTimeMillis();
         }
 
         public void end() {
@@ -35,8 +34,8 @@ public class Stack {
         @Override
         public String toString() {
             return "StackEntry{" +
-                "methodName='" + methodName + '\'' +
-                '}';
+                   "methodName='" + methodName + '\'' +
+                   '}';
         }
     }
 

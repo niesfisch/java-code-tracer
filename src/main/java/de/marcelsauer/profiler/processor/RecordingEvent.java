@@ -1,8 +1,6 @@
 package de.marcelsauer.profiler.processor;
 
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 
 public class RecordingEvent {
@@ -11,7 +9,7 @@ public class RecordingEvent {
 
     public RecordingEvent(Stack stack) {
         this.stack = stack;
-        this.timestampMillis = new Date().getTime();
+        this.timestampMillis = System.currentTimeMillis();
     }
 
     List<Stack.StackEntry> getStackEntries() {
@@ -19,24 +17,20 @@ public class RecordingEvent {
     }
 
     public String asJson() {
-        StringBuilder sb = new StringBuilder("{");
-        sb.append(String.format("\"timestampMillis\" : \"%d\", ", timestampMillis));
+        StringBuilder sb = new StringBuilder(128);
+        sb.append('{');
+        sb.append("\"timestampMillis\" : \"").append(timestampMillis).append("\", ");
+        sb.append("\"stack\" : [");
 
-        StringBuilder stackSb = new StringBuilder("[");
+        boolean first = true;
         for (Stack.StackEntry call : getStackEntries()) {
-            stackSb.append(String.format(",\"%s\"", call.methodName));
-//            stackSb.append(String.format(",\"%s%s\"", nSpaces(call), call.methodName));
+            if (!first) {
+                sb.append(',');
+            }
+            sb.append('"').append(call.methodName).append('"');
+            first = false;
         }
-        stackSb.append("]");
-        sb.append(String.format("\"stack\" : %s", stackSb.toString().replaceFirst(",", "")));
-        sb.append("}");
+        sb.append("]}");
         return sb.toString();
-    }
-
-    private String nSpaces(Stack.StackEntry call) {
-        int n = call.level;
-        char[] chars = new char[n * 2];
-        Arrays.fill(chars, ' ');
-        return new String(chars);
     }
 }

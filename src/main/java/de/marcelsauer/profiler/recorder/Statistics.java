@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Statistics {
     private static int instrumentedMethodsCount = 0;
     private static int instrumentedClassesCount = 0;
-    private static AtomicInteger stacksRecordedCounter = new AtomicInteger(0);
+    private static final AtomicInteger stacksRecordedCounter = new AtomicInteger(0);
 
     public static void addInstrumentedClass(String fqClazz) {
         instrumentedClassesCount++;

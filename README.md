@@ -1,185 +1,195 @@
-[<img src="https://api.travis-ci.org/niesfisch/java-code-tracer.png"/>](http://travis-ci.org/niesfisch/java-code-tracer/builds)
+# Java Code Tracer (JCT)
 
-# JCT = Java Code Tracer 
+JCT is a Java agent that instruments method calls at runtime and records executed call stacks.
+It helps answer one practical question in large systems: "Is this code path still used in real traffic?"
 
-JCT was born out of the idea to collect runtime information from a big monolithic (legacy) application that was running for several years. from time to time there was the same question over and over again:
+## Table of Contents
 
-> do we still need this code? nobody seems to be calling it ....
+- [What JCT Does](#what-jct-does)
+- [Recommended Local Workflow: ELK](#recommended-local-workflow-elk)
+- [Project Status](#project-status)
+- [Build](#build)
+- [Configure](#configure)
+- [Run an Application with JCT](#run-an-application-with-jct)
+- [Available Processors](#available-processors)
+- [Message Format](#message-format)
+- [Logging](#logging)
+- [Hello World Walkthrough](#hello-world-walkthrough)
+- [Tools](#tools)
+- [ELK Integration Guide](#elk-integration-guide)
+- [Similar Projects](#similar-projects)
+- [License](#license)
 
-> but i am still scared to remove it :-(
+## What JCT Does
 
-> maybe the code is called in production?
+- Instruments selected classes and methods via `-javaagent`
+- Captures call stacks and timestamps at runtime
+- Supports multiple output processors (file and UDP)
+- Lets you analyze runtime behavior without changing app code
 
-JCT helps you answering these questions by collecting information about your running application.
+## Recommended Local Workflow: ELK
 
-# Installing JCT for your application
+For local experimentation, the recommended setup is:
 
-first clone or download this project
+- JCT -> UDP -> Logstash -> Elasticsearch -> Kibana
 
-## create config
+This gives you a fast feedback loop with searchable traces and a UI for exploration.
 
-the config file is the place where you configure which classes and packages of your application should be 'monitored' for calls (aka instrumented). by default nothing will be instrumented as this would produce massive amounts of data. start by choosing a sensible package of your application to  begin with. everything is based on regex(s), so there should be a lot of freedom for you. see the config-sample.yml that you'll be copying to start with.
+Start here:
 
-```bash
-mkdir ${HOME}/.jct/
-cp doc/config-sample-file.yaml ${HOME}/.jct/
-```
+- [README-ELK.md](README-ELK.md)
 
-the recorded stacks will be save to the folder specified in the config file.
+## Project Status
 
-## built the agent jar that will be used
+This project targets Java 8 bytecode and is currently focused on practical runtime tracing for legacy and monolithic applications.
+
+## Build
 
 ```bash
 mvn clean package
-ls -al ./target/
 ```
 
-## start application with agent
+The distributable agent jar is created at:
+
+- `target/java-code-tracer-1.0-SNAPSHOT-jar-with-dependencies.jar`
+
+## Configure
+
+Create a local config file:
 
 ```bash
-# (multiline for readability)
-java -jar someApplication.jar
-  -javaagent:"/path_to/target/java-code-tracer-1.0-SNAPSHOT-jar-with-dependencies.jar"
-  -Djct.loglevel=INFO
-  -Djct.config=${HOME}/.jct/config-sample-file.yaml (optional, default is under /src/main/resources/META-INF/config.yaml, will be merged)
-  -Djct.logDir=/tmp/jct
-  -noverify (needed for the moment)
+mkdir -p "$HOME/.jct"
+cp doc/config-sample-file.yaml "$HOME/.jct/config-sample-file.yaml"
 ```
 
-## Output Processor(s))
+Notes:
 
-there are multiple ways to handle the captured data. the following processor are currently available:
+- Default config is loaded from `src/main/resources/META-INF/config.yaml`
+- If `-Djct.config=...` is set, custom config is merged with default config
 
-- **AsyncFileWritingStackProcessor**, writes stacks to dedicated files (see [config.yaml](src/test/resources/integration/test-config-asyncfile.yaml))
-- **AsyncUdpStackProcessor**, sends each stack to configured UDP port for further processing (see [config.yaml](src/test/resources/integration/test-config-asyncudp.yaml))
+## Run an Application with JCT
 
-see further down for a fullblown hello world example.
+```bash
+java \
+  -javaagent:"/path/to/java-code-tracer/target/java-code-tracer-1.0-SNAPSHOT-jar-with-dependencies.jar" \
+  -Djct.loglevel=INFO \
+  -Djct.config="$HOME/.jct/config-sample-file.yaml" \
+  -Djct.logDir=/tmp/jct \
+  -noverify \
+  -jar /path/to/your-application.jar
+```
+
+## Available Processors
+
+- `de.marcelsauer.profiler.processor.file.AsyncFileWritingStackProcessor`
+  - Example config: `src/test/resources/integration/test-config-asyncfile.yaml`
+- `de.marcelsauer.profiler.processor.udp.AsyncUdpStackProcessor`
+  - Example config: `src/test/resources/integration/test-config-asyncudp.yaml`
+- `de.marcelsauer.profiler.processor.tcp.AsyncTcpStackProcessor`
+  - Example config: `src/test/resources/integration/test-config-asynctcp.yaml`
 
 ## Message Format
 
 ```json
 {
-    "stack": [
-        "de.marcelsauer.helloworld.subA.InSubA.a_1()",
-        "de.marcelsauer.helloworld.subA.InSubA_InnerClass.a_inner_1()",
-        "de.marcelsauer.helloworld.subA.InSubA_InnerClass.a_inner_2()",
-        "de.marcelsauer.helloworld.subA.InSubA_InnerClass.a_inner_2()"
-    ],
-    "timestampMillis": "1528120883697"
+  "stack": [
+    "de.example.Service.doWork()",
+    "de.example.Repository.findById()"
+  ],
+  "timestampMillis": "1528120883697"
 }
 ```
 
-```
-timestampMillis: timestamp milliseconds the first stack entry was started
-stack: all captured stack elements during the call, where stack[0] is the entry and stack[n] is the end 
-```
+- `timestampMillis`: timestamp in milliseconds when the recorded stack entry started
+- `stack`: ordered stack frames from entry to exit point
 
 ## Logging
 
-Files can be found in `jct.logDir`
- 
-## Debugging
+JCT writes logs to the directory configured with `-Djct.logDir`.
 
-if you need more information about what will be instrumented etc. tune the loglevel. 
+For more instrumentation details, increase log level:
 
 ```bash
 -Djct.loglevel=DEBUG
 ```
 
-and check the logs ...
+## Hello World Walkthrough
 
-# How it works
-
-JCT uses byte code instrumentation. it "magically" weaves tracing information into each instrumented class/method to record calls. it keeps a map of call stacks that it collected and their counts. this is done as long as the instrumented process is running and kept in memory. as soon as the process shuts down, the collected information is gone. 
-
-## Example Hello World walkthrough
-
-In this walkthrough you will start a simple loop that prints "Hello World ..." to the console. the program will be instrumtented with JCT and some data will be collected.
-
-hint: we explicitly excluded the "HelloWorldLoop" in the config otherwise we would never get results as the loop never leaves and JCT never reaches the end of the stack.
-
-now it's time to start it locally ... 
+Use the sample loop jar in `doc/helloworld-loop.jar`:
 
 ```bash
-# produce jar with agent
-mvn clean package
-# start hello world jar with agent attached to it, (multiline for readability)
-java -javaagent:"${PWD}/target/java-code-tracer-1.0-SNAPSHOT-jar-with-dependencies.jar"
-	 -Djct.loglevel=INFO 	  
-	 -Djct.config=./doc/config-sample-helloworld.yaml
-	 -Djct.logDir=/tmp/jct -noverify 
-	 -jar "${PWD}/doc/helloworld-loop.jar"
+java \
+  -javaagent:"${PWD}/target/java-code-tracer-1.0-SNAPSHOT-jar-with-dependencies.jar" \
+  -Djct.loglevel=INFO \
+  -Djct.config="${PWD}/doc/config-sample-helloworld.yaml" \
+  -Djct.logDir=/tmp/jct \
+  -noverify \
+  -jar "${PWD}/doc/helloworld-loop.jar"
 ```
 
-you should see "Hello World .." printed to the console multiple times. 
-
-open another tab ... 
-
-check the logs ...
+Check agent logs:
 
 ```bash
 cat /tmp/jct/jct_agent.log
 ```
 
-every x seconds the collected stacks will be dumped to a file. you need to aggregate these files yourself however you see fit.
+## Tools
+
+### Stack Formatter (`tools/format_stack.py`)
+
+Pretty-prints a raw JCT `stack` array into an aligned, human-readable call sequence.
+Consecutive calls to the same class are grouped — package names are abbreviated.
+
+Requires Python 3.9+, no dependencies.
 
 ```bash
-cat /tmp/stacks/jct_xxxx_xx_xx_xxxxxx_xxx.log
+# pipe the bracket string directly
+echo '[a.b.Foo.bar(), a.b.Foo.baz()]' | python3 tools/format_stack.py
 
-{"timestampMillis" : "1528120452903", "stack" : ["de.marcelsauer.helloworld.subA.InSubA.a_1()","de.marcelsauer.helloworld.subA.InSubA_InnerClass.a_inner_1()","de.marcelsauer.helloworld.subA.InSubA_InnerClass.a_inner_2()","de.marcelsauer.helloworld.subA.InSubA_InnerClass.a_inner_2()"]}
-{"timestampMillis" : "1528120452903", "stack" : ["de.marcelsauer.helloworld.subA.InSubA.a_2()"]}
-{"timestampMillis" : "1528120452903", "stack" : ["de.marcelsauer.helloworld.subB.InSubB.b_1()","de.marcelsauer.helloworld.subB.InSubB_InnerClass.b_inner_1()","de.marcelsauer.helloworld.subB.InSubB_InnerClass.b_inner_2()","de.marcelsauer.helloworld.subB.InSubB_InnerClass.b_inner_2()"]}
-{"timestampMillis" : "1528120452903", "stack" : ["de.marcelsauer.helloworld.subB.InSubB.b_2()","de.marcelsauer.helloworld.subB.InSubB_InnerClass.b_inner_1()","de.marcelsauer.helloworld.subB.InSubB_InnerClass.b_inner_2()","de.marcelsauer.helloworld.subB.InSubB_InnerClass.b_inner_2()"]}
+# from a file
+python3 tools/format_stack.py stack.txt
+
+# grab from clipboard (Linux)
+xclip -o | python3 tools/format_stack.py
 ```
 
-you could use some simple aggregation like this
-
-```bash
-cd /tmp/stacks/
-for file in `find . -name "jct*"`; do cat $file >> all.log; done
-cat all.log | perl -pe 's/.*\[(.*)\].*/\1/' | sort | uniq -c
-
-   5 "de.marcelsauer.helloworld.subA.InSubA.a_1()","de.marcelsauer.helloworld.subA.InSubA_InnerClass.a_inner_1()","de.marcelsauer.helloworld.subA.InSubA_InnerClass.a_inner_2()","de.marcelsauer.helloworld.subA.InSubA_InnerClass.a_inner_2()"
-   5 "de.marcelsauer.helloworld.subA.InSubA.a_2()"
-   5 "de.marcelsauer.helloworld.subB.InSubB.b_1()","de.marcelsauer.helloworld.subB.InSubB_InnerClass.b_inner_1()","de.marcelsauer.helloworld.subB.InSubB_InnerClass.b_inner_2()","de.marcelsauer.helloworld.subB.InSubB_InnerClass.b_inner_2()"
-   5 "de.marcelsauer.helloworld.subB.InSubB.b_2()","de.marcelsauer.helloworld.subB.InSubB_InnerClass.b_inner_1()","de.marcelsauer.helloworld.subB.InSubB_InnerClass.b_inner_2()","de.marcelsauer.helloworld.subB.InSubB_InnerClass.b_inner_2()"
+Example output:
 
 ```
-
-### JCT -> UDP -> Logstash -> Elasticsearch example
-
-here is a full example to use UDP + logstash + elasticsearch (assumes you have [logstash](https://www.elastic.co/de/downloads/logstash)/[docker](https://www.docker.com/community-edition#/download) on your machine and the UDP processor sends to port 9999)
-
-```bash
-
-# tab1, start logstash with out UDP input and elasticsearch output
-logstash -f doc/logstash.conf
-
-#tab2, start elasticsearch
-docker run -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:6.2.4
-
-#tab3 (multiline for readability), start helloworld loop that will send captured stacks to UDP->logstash->elastisearch
-java -javaagent:"${PWD}/target/java-code-tracer-1.0-SNAPSHOT-jar-with-dependencies.jar" 
-	 -Djct.loglevel=INFO 
-	 -Djct.config=./doc/config-sample-helloworld-udp.yaml 
-	 -Djct.logDir=/tmp/jct 
-	 -noverify 
-	 -jar "${PWD}/doc/helloworld-loop.jar"
-
-# query captured data
-curl -XGET http://127.0.0.1:9200/jct_stacks/_search
+   #  package        class                  method
+  ──────────────────────────────────────────────────────
+   1  o.b.s.u.ldap   LdapConnectionFactory  .initialize(LdapConnectionConfigurationDTO)
+   2                                        .connect()
+   3  o.b.s.u.ldap   LdapConnectionConfigurationDTO  .getLdapServer1()
+  ...
 ```
 
-# Similar Projects/Ideas
+## ELK Integration Guide
+
+For local Elasticsearch + Logstash + Kibana setup (Docker), UI access, data view setup, and log exploration, see the dedicated guide:
+
+- [README-ELK.md](README-ELK.md)
+- [README-analysis-ELK.md](README-ELK-analysys.md)
+
+## Similar Projects
 
 - [Datadog dd-trace-java](https://github.com/DataDog/dd-trace-java/)
-- [NewRelic](https://newrelic.com/)
-- [Call Graph](https://github.com/gousiosg/java-callgraph)
+- [New Relic](https://newrelic.com/)
+- [java-callgraph](https://github.com/gousiosg/java-callgraph)
 
-# ToDos, Ideas
+## IntelliJ JVM Options Example
 
-- use proper dependency injection instead of static calls
+Use the following IntelliJ Run/Debug VM options example when attaching JCT as a Java agent:
 
-# License
+![IntelliJ IDEA VM options example](doc/intellij_idea_vm_options.png)
+
+## License
 
 [MIT](LICENSE.txt)
+
+# For me :)
+
+```bash
+GIT_SSH_COMMAND='ssh -i ~/.ssh/niesfisch' git pull
+GIT_SSH_COMMAND='ssh -i ~/.ssh/niesfisch' git push
+```

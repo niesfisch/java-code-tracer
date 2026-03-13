@@ -1,13 +1,12 @@
 package de.marcelsauer.profiler.recorder;
 
-import java.util.LinkedList;
-import java.util.Stack;
-
-import org.apache.log4j.Logger;
-
 import de.marcelsauer.profiler.processor.RecordingEvent;
 import de.marcelsauer.profiler.processor.StackProcessor;
 import de.marcelsauer.profiler.processor.StackProcessorFactory;
+import org.apache.log4j.Logger;
+
+import java.util.LinkedList;
+import java.util.Stack;
 
 /**
  * @author msauer

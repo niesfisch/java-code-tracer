@@ -17,10 +17,10 @@ public class Recorder {
     @Override
     public String toString() {
         return "Recorder{" +
-            "interfaces=" + interfaces +
-            ", superClasses=" + superClasses +
-            ", classLevelAnnotations=" + classLevelAnnotations +
-            ", methodLevelAnnotations=" + methodLevelAnnotations +
-            '}';
+               "interfaces=" + interfaces +
+               ", superClasses=" + superClasses +
+               ", classLevelAnnotations=" + classLevelAnnotations +
+               ", methodLevelAnnotations=" + methodLevelAnnotations +
+               '}';
     }
 }

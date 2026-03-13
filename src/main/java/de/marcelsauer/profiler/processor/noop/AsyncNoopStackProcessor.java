@@ -1,9 +1,9 @@
 package de.marcelsauer.profiler.processor.noop;
 
-import java.util.Collection;
-
 import de.marcelsauer.profiler.processor.AbstractAsyncStackProcessor;
 import de.marcelsauer.profiler.processor.RecordingEvent;
+
+import java.util.Collection;
 
 public class AsyncNoopStackProcessor extends AbstractAsyncStackProcessor {
     @Override

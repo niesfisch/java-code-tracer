@@ -1,0 +1,80 @@
+package de.marcelsauer.profiler.processor;
+
+import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+public class AbstractAsyncStackProcessorTest {
+
+    @Test
+    public void thatStopFlushesPendingQueue() {
+        // queue events first, then stop immediately; stop must flush remaining events.
+        TestProcessor processor = new TestProcessor();
+        processor.process(newEvent("m1"));
+        processor.process(newEvent("m2"));
+
+        processor.stop();
+
+        assertEquals(2, processor.getProcessedCount());
+    }
+
+    @Test
+    public void thatQueueIsDrainedInBatchesWithoutLosingEvents() {
+        TestProcessor processor = new TestProcessor();
+        processor.start();
+
+        int total = 1300;
+        for (int i = 0; i < total; i++) {
+            processor.process(newEvent("m" + i));
+        }
+
+        processor.stop();
+
+        assertEquals(total, processor.getProcessedCount());
+        for (Integer batchSize : processor.getBatchSizes()) {
+            assertTrue("batch size should stay bounded", batchSize <= 2048);
+        }
+    }
+
+    private RecordingEvent newEvent(String methodName) {
+        Stack.StackEntry entry = new Stack.StackEntry(methodName, 1L, 0);
+        return new RecordingEvent(new Stack(Collections.singletonList(entry)));
+    }
+
+    private static class TestProcessor extends AbstractAsyncStackProcessor {
+        private final AtomicInteger processedCount = new AtomicInteger();
+        private final List<Integer> batchSizes = Collections.synchronizedList(new ArrayList<Integer>());
+
+        @Override
+        protected void doStart() {
+            // no-op
+        }
+
+        @Override
+        protected void doStop() {
+            // no-op
+        }
+
+        @Override
+        protected void doProcess(Collection<RecordingEvent> snapshots) {
+            batchSizes.add(snapshots.size());
+            processedCount.addAndGet(snapshots.size());
+        }
+
+        int getProcessedCount() {
+            return processedCount.get();
+        }
+
+        List<Integer> getBatchSizes() {
+            return batchSizes;
+        }
+    }
+}
+

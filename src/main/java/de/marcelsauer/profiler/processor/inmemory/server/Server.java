@@ -3,21 +3,19 @@
  */
 package de.marcelsauer.profiler.processor.inmemory.server;
 
+import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpHandler;
+import com.sun.net.httpserver.HttpServer;
+import de.marcelsauer.profiler.processor.inmemory.InMemoryCountingCollector;
+import de.marcelsauer.profiler.recorder.Statistics;
+import org.apache.log4j.Logger;
+
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
-
-import org.apache.log4j.Logger;
-
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
-import com.sun.net.httpserver.HttpServer;
-
-import de.marcelsauer.profiler.processor.inmemory.InMemoryCountingCollector;
-import de.marcelsauer.profiler.recorder.Statistics;
 
 /**
  * @author msauer
@@ -63,13 +61,13 @@ public class Server {
     private int getPort() {
         int port = 9001;
         String p = System.getProperty("jct.tracer.server.port");
-        if (p != null && !"".equals(p.trim())) {
+        if (p != null && !p.trim().isEmpty()) {
             port = Integer.parseInt(p);
         }
         return port;
     }
 
-    private class Stats {
+    private static class Stats {
 
         final int uniqueStacks;
         final Date started;
@@ -89,13 +87,13 @@ public class Server {
         public String toString() {
             return String.format(
                 "{\n" +
-                    "   \"uniqueStacks\":%d,\n" +
-                    "   \"started\":\"%s\",\n" +
-                    "   \"stackSizeInBytes\":%d,\n" +
-                    "   \"stackSizeInMBytes\":%d,\n" +
-                    "   \"numberOfMethodsInstrumented\":%d,\n" +
-                    "   \"numberOfClassesInstrumented\":%d\n" +
-                    "}",
+                "   \"uniqueStacks\":%d,\n" +
+                "   \"started\":\"%s\",\n" +
+                "   \"stackSizeInBytes\":%d,\n" +
+                "   \"stackSizeInMBytes\":%d,\n" +
+                "   \"numberOfMethodsInstrumented\":%d,\n" +
+                "   \"numberOfClassesInstrumented\":%d\n" +
+                "}",
                 uniqueStacks,
                 started,
                 size,

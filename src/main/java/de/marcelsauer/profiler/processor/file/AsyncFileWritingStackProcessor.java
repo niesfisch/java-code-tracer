@@ -1,6 +1,12 @@
 package de.marcelsauer.profiler.processor.file;
 
+import de.marcelsauer.profiler.config.Config;
+import de.marcelsauer.profiler.processor.AbstractAsyncStackProcessor;
+import de.marcelsauer.profiler.processor.RecordingEvent;
+import org.apache.log4j.Logger;
+
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -8,12 +14,6 @@ import java.nio.file.StandardOpenOption;
 import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
-
-import org.apache.log4j.Logger;
-
-import de.marcelsauer.profiler.config.Config;
-import de.marcelsauer.profiler.processor.AbstractAsyncStackProcessor;
-import de.marcelsauer.profiler.processor.RecordingEvent;
 
 /**
  * writes data to configured file
@@ -47,7 +47,7 @@ public class AsyncFileWritingStackProcessor extends AbstractAsyncStackProcessor 
 
     private void writeEventToFile(RecordingEvent event, String outFilename) throws IOException {
         String json = event.asJson();
-        Files.write(Paths.get(outFilename), (json + "\n").getBytes("UTF-8"), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+        Files.write(Paths.get(outFilename), (json + "\n").getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
     }
 
     private String getOutFilename() {

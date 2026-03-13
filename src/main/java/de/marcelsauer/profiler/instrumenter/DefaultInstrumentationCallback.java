@@ -1,10 +1,7 @@
 package de.marcelsauer.profiler.instrumenter;
 
-import org.apache.log4j.Logger;
-
-import de.marcelsauer.profiler.config.Config;
-import de.marcelsauer.profiler.recorder.Recorder;
 import javassist.CtMethod;
+import org.apache.log4j.Logger;
 
 /**
  * @author msauer
@@ -12,25 +9,53 @@ import javassist.CtMethod;
 public class DefaultInstrumentationCallback implements Instrumenter.InstrumentationCallback {
 
     private static final Logger logger = Logger.getLogger(DefaultInstrumentationCallback.class);
-    private final Config config;
+    private static final String RECORDER_CLASS_NAME = "de.marcelsauer.profiler.recorder.Recorder";
 
-    public DefaultInstrumentationCallback(Config config) {
-        this.config = config;
+    public boolean instrument(CtMethod declaredMethod) {
+        if (declaredMethod.getMethodInfo().getCodeAttribute() == null) {
+            logger.debug("[skipping empty method] '" + declaredMethod.getLongName() + "'");
+            return false;
+        }
 
-        // preload recorder class
-        Recorder.touch();
-    }
-
-    public void instrument(CtMethod declaredMethod) {
-        String methodNameLong = declaredMethod.getLongName();
+        String methodNameLong = escapeForJavaString(declaredMethod.getLongName());
 
         logger.debug("[will record] method '" + declaredMethod.getLongName() + "'");
         try {
-            declaredMethod.insertBefore(String.format("%s.start(\"%s\");", Recorder.class.getName(), methodNameLong));
-            declaredMethod.insertAfter(String.format("%s.stop();", Recorder.class.getName()), true);
+            declaredMethod.insertBefore(createStartSnippet(methodNameLong));
+            declaredMethod.insertAfter(createStopSnippet(), true);
+            return true;
         } catch (Exception e) {
             logger.warn(String.format("could not instrument method %s: %s", declaredMethod.getLongName(), e.getMessage()));
+            return false;
         }
+    }
+
+    private String createStartSnippet(String methodNameLong) {
+        return "{"
+            + "try {"
+            + "ClassLoader jctLoader = ClassLoader.getSystemClassLoader();"
+            + "Class jctRecorderClass = Class.forName(\"" + RECORDER_CLASS_NAME + "\", true, jctLoader);"
+            + "java.lang.reflect.Method jctStartMethod = jctRecorderClass.getMethod(\"start\", new Class[]{String.class});"
+            + "jctStartMethod.invoke(null, new Object[]{\"" + methodNameLong + "\"});"
+            + "} catch (Throwable jctIgnored) {"
+            + "}"
+            + "}";
+    }
+
+    private String createStopSnippet() {
+        return "{"
+            + "try {"
+            + "ClassLoader jctLoader = ClassLoader.getSystemClassLoader();"
+            + "Class jctRecorderClass = Class.forName(\"" + RECORDER_CLASS_NAME + "\", true, jctLoader);"
+            + "java.lang.reflect.Method jctStopMethod = jctRecorderClass.getMethod(\"stop\", new Class[0]);"
+            + "jctStopMethod.invoke(null, new Object[0]);"
+            + "} catch (Throwable jctIgnored) {"
+            + "}"
+            + "}";
+    }
+
+    private String escapeForJavaString(String input) {
+        return input.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 
 }

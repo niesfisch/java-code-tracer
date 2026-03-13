@@ -1,13 +1,15 @@
 package de.marcelsauer.profiler.instrumenter;
 
-import org.apache.log4j.Logger;
-
 import de.marcelsauer.profiler.recorder.Statistics;
 import de.marcelsauer.profiler.util.Util;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtMethod;
 import javassist.LoaderClassPath;
+import org.apache.log4j.Logger;
+
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * @author msauer
@@ -16,17 +18,17 @@ public class Instrumenter {
 
     private static final Logger logger = Logger.getLogger(Instrumenter.class);
     private final InstrumentationCallback callback;
-    private boolean done = false;
+    private final ConcurrentMap<ClassLoader, ClassPool> classPools = new ConcurrentHashMap<>();
 
     public Instrumenter(InstrumentationCallback callback) {
         this.callback = callback;
     }
 
     public interface InstrumentationCallback {
-        void instrument(CtMethod declaredMethod);
+        boolean instrument(CtMethod declaredMethod);
     }
 
-    public byte[] instrument(String className, ClassLoader loader, Class klass) {
+    public byte[] instrument(String className, ClassLoader loader) {
         try {
 
             ClassPool cp = getClassPool(loader);
@@ -42,8 +44,10 @@ public class Instrumenter {
 
             for (CtMethod declaredMethod : declaredMethods) {
                 try {
-                    this.callback.instrument(declaredMethod);
-                    Statistics.addInstrumentedMethod(declaredMethod.getLongName());
+                    boolean instrumented = this.callback.instrument(declaredMethod);
+                    if (instrumented) {
+                        Statistics.addInstrumentedMethod(declaredMethod.getLongName());
+                    }
                 } catch (Exception e) {
                     logger.warn(String.format("could not instrument method '%s': %s", className, e.getMessage()));
                     return null;
@@ -63,10 +67,16 @@ public class Instrumenter {
     }
 
     private ClassPool getClassPool(ClassLoader loader) {
-        ClassPool cp = ClassPool.getDefault();
-        if (!done) {
+        if (loader == null) {
+            return createClassPool(null);
+        }
+        return classPools.computeIfAbsent(loader, this::createClassPool);
+    }
+
+    private ClassPool createClassPool(ClassLoader loader) {
+        ClassPool cp = new ClassPool(true);
+        if (loader != null) {
             cp.insertClassPath(new LoaderClassPath(loader));
-            done = true;
         }
         return cp;
     }
