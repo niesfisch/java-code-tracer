@@ -8,6 +8,7 @@ It helps answer one practical question in large systems: "Is this code path stil
 - [What JCT Does](#what-jct-does)
 - [Recommended Local Workflow: ELK](#recommended-local-workflow-elk)
 - [Project Status](#project-status)
+- [Java Version](#java-version)
 - [Build](#build)
 - [Configure](#configure)
 - [Run an Application with JCT](#run-an-application-with-jct)
@@ -53,6 +54,15 @@ Start here:
 ## Project Status
 
 This project targets Java 8 bytecode and is currently focused on practical runtime tracing for legacy and monolithic applications.
+
+## Java Version
+
+> **Minimum: Java 8**
+
+JCT is compiled against Java 8 (`-source 8 -target 8`) and intentionally uses no APIs beyond that level.
+This is a deliberate choice — the primary target is legacy and monolithic systems that are often stuck on older JVMs.
+
+It runs fine on newer JVMs (11, 17, 21, …) without any changes.
 
 ## Build
 
