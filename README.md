@@ -1,4 +1,4 @@
-# Java Code Tracer (JCT) [![Maven Tests](https://github.com/niesfisch/java-code-tracer/actions/workflows/maven-tests.yml/badge.svg)](https://github.com/niesfisch/java-code-tracer/actions/workflows/maven-tests.yml)
+# Java Code Tracer (JCT)
 
 JCT is a Java agent that records real method call stacks while your application is running.
 
