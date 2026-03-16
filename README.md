@@ -1,11 +1,14 @@
 # Java Code Tracer (JCT) [![Maven Tests](https://github.com/niesfisch/java-code-tracer/actions/workflows/maven-tests.yml/badge.svg)](https://github.com/niesfisch/java-code-tracer/actions/workflows/maven-tests.yml)
 
-JCT is a Java agent that instruments method calls at runtime and records executed call stacks.
-It helps answer one practical question in large systems: "Is this code path still used in real traffic?"
+JCT is a Java agent that records real method call stacks while your application is running.
+
+If you work in a legacy app and ask things like "Can we remove this?" or "Is this code path still hit in production-like traffic?", JCT gives you hard runtime evidence instead of guesses.
 
 ## Table of Contents
 
-- [What JCT Does](#what-jct-does)
+- [Why This Is Useful in Legacy Systems](#why-this-is-useful-in-legacy-systems)
+- [What JCT Does at Runtime](#what-jct-does-at-runtime)
+- [Quick Start in 3 Steps](#quick-start-in-3-steps)
 - [Recommended Local Workflow: ELK](#recommended-local-workflow-elk)
 - [Project Status](#project-status)
 - [Java Version](#java-version)
@@ -19,33 +22,68 @@ It helps answer one practical question in large systems: "Is this code path stil
 - [Tools](#tools)
 - [ELK Integration Guide](#elk-integration-guide)
 - [Similar Projects](#similar-projects)
+- [IntelliJ JVM Options Example](#intellij-jvm-options-example)
 - [License](#license)
 
-## What JCT Does
+## Why This Is Useful in Legacy Systems
 
-- Instruments selected classes and methods via `-javaagent`
-- Captures call stacks and timestamps at runtime
-- Supports multiple output processors (file and UDP)
-- Lets you analyze runtime behavior without changing app code
+In older monoliths and large shared platforms, static code search is usually not enough.
+
+- Feature flags, reflection, and framework magic hide real call paths
+- "Unused" code often turns out to be used by one weird but critical flow
+- Refactoring without runtime traces is risky and slow
+
+JCT helps you reduce that risk by showing what was actually executed.
+
+## What JCT Does at Runtime
+
+When you attach JCT via `-javaagent`, it does this:
+
+1. Instruments methods that match your include/exclude config
+2. Captures call stacks during real execution
+3. Sends stack events to a processor (file, UDP or TCP)
+4. Lets you inspect those events to validate or reject assumptions
+
+This is especially useful before deleting legacy code, splitting modules, or tightening APIs.
+
+## Quick Start in 3 Steps
+
+If you just want first results quickly:
+
+1. Build JCT
+2. Start your app with `-javaagent` and a config
+3. Inspect generated events (file output or ELK stack)
+
+Minimum commands:
+
+```bash
+mvn clean package
+mkdir -p "$HOME/.jct"
+cp doc/config-sample-file.yaml "$HOME/.jct/config-sample-file.yaml"
+java \
+  -javaagent:"${PWD}/target/java-code-tracer-1.0-SNAPSHOT-jar-with-dependencies.jar" \
+  -Djct.config="$HOME/.jct/config-sample-file.yaml" \
+  -Djct.logDir=/tmp/jct \
+  -noverify \
+  -jar /path/to/your-application.jar
+```
+
+Then check `/tmp/jct` logs and your configured processor output.
 
 ## Recommended Local Workflow: ELK
 
 For local experimentation, the recommended setup is:
 
 ```
-  -javaagent:jct.jar          Docker Compose
-  ┌─────────────────┐     ┌───────────────────────────────────┐
-  │   JCT Agent     │     │  Logstash :9999                   │
-  │   Recorder      │────▶│    │                              │
-  │   Stack         │     │    ▼                              │
-  │   Processor     │     │  Elasticsearch  (jct-events-*)    │
-  │  UDP / TCP      │     │    │                              │
-  └─────────────────┘     │    ▼                              │
-                          │  Kibana :5601                     │
-                          └───────────────────────────────────┘
+  -javaagent:jct.jar            docker compose up
+  +-------------------+      +-----------------------------------+
+  | App + JCT Agent   |      | Logstash :9999                   |
+  | Recorder/Processor|----->|   -> Elasticsearch (jct-events-*)|
+  +-------------------+      |   -> Kibana :5601                |
+                             +-----------------------------------+
 ```
 
-This gives you a fast feedback loop with searchable traces and a UI for exploration.
+This gives you a fast feedback loop: run traffic, query traces, validate code paths.
 
 Start here:
 
@@ -208,9 +246,3 @@ Use the following IntelliJ Run/Debug VM options example when attaching JCT as a 
 
 [MIT](LICENSE.txt)
 
-# For me :)
-
-```bash
-GIT_SSH_COMMAND='ssh -i ~/.ssh/niesfisch' git pull
-GIT_SSH_COMMAND='ssh -i ~/.ssh/niesfisch' git push
-```
