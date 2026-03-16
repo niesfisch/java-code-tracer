@@ -16,6 +16,7 @@ If you work in a legacy app and ask things like "Can we remove this?" or "Is thi
 - [Configure](#configure)
 - [Run an Application with JCT](#run-an-application-with-jct)
 - [Available Processors](#available-processors)
+- [Stack Volume Control (All vs New Stacks)](#stack-volume-control-all-vs-new-stacks)
 - [Message Format](#message-format)
 - [Logging](#logging)
 - [Hello World Walkthrough](#hello-world-walkthrough)
@@ -167,6 +168,40 @@ Quick chooser:
 - Pick `file` if you want easiest first success and local evidence fast
 - Pick `udp` if you optimize for throughput and can tolerate some loss
 - Pick `tcp` if you want better transport reliability for ELK pipelines
+
+## Stack Volume Control (All vs New Stacks)
+
+On busy systems, writing every single captured stack can create huge event volume.
+If your main question is only "Was this path hit at least once?", you can report only new stacks.
+
+Processor flags:
+
+- `processor.reportAllStacks`
+  - `true` (default): report every captured event
+  - `false`: report only first-seen stack hashes within the current dedup window
+- `processor.stackHashResetIntervalMillis`
+  - Periodically clears remembered stack hashes to cap memory usage in long-running JVMs
+  - Default: `300000` (5 minutes)
+
+Example: report only new stacks (good for high-traffic legacy systems)
+
+```yaml
+processor:
+  fullQualifiedClass: de.marcelsauer.profiler.processor.udp.AsyncUdpStackProcessor
+  udpHost: localhost
+  udpPort: 9999
+  reportAllStacks: false
+  stackHashResetIntervalMillis: 300000
+```
+
+Example: report all stacks (full event stream)
+
+```yaml
+processor:
+  fullQualifiedClass: de.marcelsauer.profiler.processor.file.AsyncFileWritingStackProcessor
+  stackFolderName: /tmp/stacks/
+  reportAllStacks: true
+```
 
 ## Message Format
 

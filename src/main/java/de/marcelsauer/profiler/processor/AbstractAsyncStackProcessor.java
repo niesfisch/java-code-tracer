@@ -1,10 +1,13 @@
 package de.marcelsauer.profiler.processor;
 
+import de.marcelsauer.profiler.config.Config;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -28,6 +31,9 @@ public abstract class AbstractAsyncStackProcessor implements StackProcessor {
     private final BlockingQueue<RecordingEvent> workerQueue = new ArrayBlockingQueue<>(CAPACITY);
     private final AtomicBoolean started = new AtomicBoolean(false);
     private final List<RecordingEvent> drainBuffer = new ArrayList<>(DRAIN_BATCH_SIZE);
+    private final List<RecordingEvent> dedupBuffer = new ArrayList<>(DRAIN_BATCH_SIZE);
+    private final Set<Integer> seenStackHashes = new HashSet<>();
+    private long nextStackHashResetAtMillis = 0L;
 
     /**
      * acting like cron
@@ -56,6 +62,7 @@ public abstract class AbstractAsyncStackProcessor implements StackProcessor {
     @Override
     public void start() {
         logger.info("starting " + this.getClass().getName());
+        resetDedupWindow();
         doStart();
         startScheduler();
     }
@@ -112,11 +119,17 @@ public abstract class AbstractAsyncStackProcessor implements StackProcessor {
             if (snapshot.isEmpty()) {
                 return;
             }
-            doProcess(snapshot);
-            successfullyProcessedStacksCounter.addAndGet(snapshot.size());
+
+            Collection<RecordingEvent> reportableSnapshot = filterReportableStacks(snapshot);
+            if (reportableSnapshot.isEmpty()) {
+                continue;
+            }
+
+            doProcess(reportableSnapshot);
+            successfullyProcessedStacksCounter.addAndGet(reportableSnapshot.size());
             logger.info(
                 String.format("delegated %d stacks to %s. successfully processed so far %d",
-                    snapshot.size(),
+                    reportableSnapshot.size(),
                     this.getClass().getSimpleName(),
                     successfullyProcessedStacksCounter.intValue()));
         }
@@ -126,6 +139,49 @@ public abstract class AbstractAsyncStackProcessor implements StackProcessor {
         drainBuffer.clear();
         workerQueue.drainTo(drainBuffer, DRAIN_BATCH_SIZE);
         return drainBuffer;
+    }
+
+    private Collection<RecordingEvent> filterReportableStacks(Collection<RecordingEvent> snapshot) {
+        if (isReportAllStacks()) {
+            return snapshot;
+        }
+
+        maybeResetSeenStackHashes();
+
+        dedupBuffer.clear();
+        for (RecordingEvent event : snapshot) {
+            if (seenStackHashes.add(event.getStackHash())) {
+                dedupBuffer.add(event);
+            }
+        }
+        return dedupBuffer;
+    }
+
+    private void maybeResetSeenStackHashes() {
+        long now = currentTimeMillis();
+        if (now < nextStackHashResetAtMillis) {
+            return;
+        }
+
+        seenStackHashes.clear();
+        nextStackHashResetAtMillis = now + getStackHashResetIntervalMillis();
+    }
+
+    private void resetDedupWindow() {
+        seenStackHashes.clear();
+        nextStackHashResetAtMillis = currentTimeMillis() + getStackHashResetIntervalMillis();
+    }
+
+    protected boolean isReportAllStacks() {
+        return Config.get().processor.reportAllStacks;
+    }
+
+    protected long getStackHashResetIntervalMillis() {
+        return Math.max(1_000L, Config.get().processor.stackHashResetIntervalMillis);
+    }
+
+    protected long currentTimeMillis() {
+        return System.currentTimeMillis();
     }
 
     class WorkQueueProcessorTask implements Runnable {

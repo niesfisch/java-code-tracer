@@ -8,3 +8,7 @@ processor:
     fullQualifiedClass: de.marcelsauer.profiler.processor.udp.AsyncUdpStackProcessor
     udpHost: localhost
     udpPort: 9999
+    # report only first-seen stacks in a time window
+    reportAllStacks: false
+    # reset dedup hashes every 5 minutes to cap memory usage
+    stackHashResetIntervalMillis: 300000

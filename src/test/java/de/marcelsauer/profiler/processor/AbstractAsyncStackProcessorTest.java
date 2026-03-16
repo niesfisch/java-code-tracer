@@ -43,14 +43,58 @@ public class AbstractAsyncStackProcessorTest {
         }
     }
 
+    @Test
+    public void thatOnlyNewStacksAreReportedWhenDedupModeIsEnabled() {
+        TestProcessor processor = new TestProcessor(false, 60_000L);
+        processor.start();
+
+        processor.process(newEvent("m1"));
+        processor.process(newEvent("m1"));
+        processor.process(newEvent("m2"));
+        processor.process(newEvent("m1"));
+
+        processor.stop();
+
+        assertEquals(2, processor.getProcessedCount());
+    }
+
+    @Test
+    public void thatSeenHashesAreResetAfterConfiguredInterval() throws InterruptedException {
+        TestProcessor processor = new TestProcessor(false, 1000L);
+        processor.start();
+
+        processor.process(newEvent("m1"));
+        Thread.sleep(1200L);
+
+        processor.advanceClockMillis(2000L);
+        processor.process(newEvent("m1"));
+        Thread.sleep(1200L);
+
+        processor.stop();
+
+        assertEquals(2, processor.getProcessedCount());
+    }
+
     private RecordingEvent newEvent(String methodName) {
         Stack.StackEntry entry = new Stack.StackEntry(methodName, 1L, 0);
         return new RecordingEvent(new Stack(Collections.singletonList(entry)));
     }
 
     private static class TestProcessor extends AbstractAsyncStackProcessor {
+        private final boolean reportAllStacks;
+        private final long stackHashResetIntervalMillis;
+        private long nowMillis;
         private final AtomicInteger processedCount = new AtomicInteger();
         private final List<Integer> batchSizes = Collections.synchronizedList(new ArrayList<Integer>());
+
+        TestProcessor() {
+            this(true, 300_000L);
+        }
+
+        TestProcessor(boolean reportAllStacks, long stackHashResetIntervalMillis) {
+            this.reportAllStacks = reportAllStacks;
+            this.stackHashResetIntervalMillis = stackHashResetIntervalMillis;
+        }
 
         @Override
         protected void doStart() {
@@ -66,6 +110,25 @@ public class AbstractAsyncStackProcessorTest {
         protected void doProcess(Collection<RecordingEvent> snapshots) {
             batchSizes.add(snapshots.size());
             processedCount.addAndGet(snapshots.size());
+        }
+
+        @Override
+        protected boolean isReportAllStacks() {
+            return reportAllStacks;
+        }
+
+        @Override
+        protected long getStackHashResetIntervalMillis() {
+            return stackHashResetIntervalMillis;
+        }
+
+        @Override
+        protected long currentTimeMillis() {
+            return nowMillis;
+        }
+
+        void advanceClockMillis(long millis) {
+            nowMillis += millis;
         }
 
         int getProcessedCount() {
