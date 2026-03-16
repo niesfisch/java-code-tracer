@@ -140,12 +140,32 @@ java \
 
 ## Available Processors
 
+JCT currently ships with three output processors.
+
 - `de.marcelsauer.profiler.processor.file.AsyncFileWritingStackProcessor`
-  - Example config: `src/test/resources/integration/test-config-asyncfile.yaml`
+  - Writes one JSON event per line into a daily log file (`jct_yyyy_dd_MM.log`) in `processor.stackFolderName`
+  - Best when you want the simplest setup, local debugging, or offline analysis
+  - Trade-off: local disk I/O and file handling are on you
+  - Sample configs: `doc/config-sample-file.yaml`, `src/test/resources/integration/test-config-asyncfile.yaml`
+
 - `de.marcelsauer.profiler.processor.udp.AsyncUdpStackProcessor`
-  - Example config: `src/test/resources/integration/test-config-asyncudp.yaml`
+  - Sends each JSON event as a UDP datagram to `processor.udpHost:processor.udpPort`
+  - Best for low overhead streaming to Logstash when occasional loss is acceptable
+  - Trade-off: no delivery guarantee; oversized/failed sends are discarded
+  - Sample configs: `doc/config-sample-helloworld-udp.yaml`, `src/test/resources/integration/test-config-asyncudp.yaml`
+
 - `de.marcelsauer.profiler.processor.tcp.AsyncTcpStackProcessor`
-  - Example config: `src/test/resources/integration/test-config-asynctcp.yaml`
+  - Sends one JSON event per line over TCP to `processor.tcpHost:processor.tcpPort`
+  - Reconnects automatically using `tcpConnectTimeoutMillis` and `tcpReconnectDelayMillis`
+  - Best when you want stronger delivery behavior than UDP for central ingestion
+  - Trade-off: network/backpressure issues can still cause dropped events after failed writes
+  - Sample configs: `doc/config-sample-helloworld-tcp.yaml`, `src/test/resources/integration/test-config-asynctcp.yaml`
+
+Quick chooser:
+
+- Pick `file` if you want easiest first success and local evidence fast
+- Pick `udp` if you optimize for throughput and can tolerate some loss
+- Pick `tcp` if you want better transport reliability for ELK pipelines
 
 ## Message Format
 
