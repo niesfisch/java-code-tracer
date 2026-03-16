@@ -103,6 +103,8 @@ This is a deliberate choice — the primary target is legacy and monolithic syst
 
 It runs fine on newer JVMs (11, 17, 21, …) without any changes.
 
+The GitHub Actions build validates the project on JDK 8 and on JDK 17 through 21.
+
 ## Build
 
 ```bash
