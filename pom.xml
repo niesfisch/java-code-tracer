@@ -14,8 +14,6 @@
         <java.version>8</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
-        <palantir.version>2.50.0</palantir.version>
-        <spotless-maven-plugin.version>3.2.1</spotless-maven-plugin.version>
     </properties>
 
     <developers>
