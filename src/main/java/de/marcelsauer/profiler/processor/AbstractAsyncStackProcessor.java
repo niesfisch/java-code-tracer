@@ -166,8 +166,10 @@ public abstract class AbstractAsyncStackProcessor implements StackProcessor {
             return;
         }
 
+        int clearedCount = seenStackHashes.size();
         seenStackHashes.clear();
         nextStackHashResetAtMillis = now + getStackHashResetIntervalMillis();
+        logger.info(String.format("dedup cache purged: cleared %d stack hash(es), next reset in %dms", clearedCount, getStackHashResetIntervalMillis()));
     }
 
     private void resetDedupWindow() {
