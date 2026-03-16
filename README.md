@@ -181,7 +181,7 @@ Processor flags:
   - `false`: report only first-seen stack hashes within the current dedup window
 - `processor.stackHashResetIntervalMillis`
   - Periodically clears remembered stack hashes to cap memory usage in long-running JVMs
-  - Default: `300000` (5 minutes)
+  - In dedup mode (`reportAllStacks: false`): if missing, JCT logs a warning and uses `30000` (30 seconds)
 
 Example: report only new stacks (good for high-traffic legacy systems)
 

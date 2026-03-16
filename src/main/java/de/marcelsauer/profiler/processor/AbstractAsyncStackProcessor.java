@@ -21,6 +21,8 @@ public abstract class AbstractAsyncStackProcessor implements StackProcessor {
     private static final String JCA_PROCESSOR_THREAD = "jca-processor-thread";
     private static final int CAPACITY = 100_000;
     private static final int DRAIN_BATCH_SIZE = 2048;
+    private static final long DEFAULT_STACK_HASH_RESET_INTERVAL_MILLIS = 300_000L;
+    private static final long DEFAULT_STACK_HASH_RESET_INTERVAL_IN_DEDUP_MODE_MILLIS = 30_000L;
 
     /**
      * counters
@@ -34,6 +36,7 @@ public abstract class AbstractAsyncStackProcessor implements StackProcessor {
     private final List<RecordingEvent> dedupBuffer = new ArrayList<>(DRAIN_BATCH_SIZE);
     private final Set<Integer> seenStackHashes = new HashSet<>();
     private long nextStackHashResetAtMillis = 0L;
+    private boolean warnedMissingDedupResetInterval;
 
     /**
      * acting like cron
@@ -177,7 +180,24 @@ public abstract class AbstractAsyncStackProcessor implements StackProcessor {
     }
 
     protected long getStackHashResetIntervalMillis() {
-        return Math.max(1_000L, Config.get().processor.stackHashResetIntervalMillis);
+        Long configuredInterval = getConfiguredStackHashResetIntervalMillis();
+        if (configuredInterval != null) {
+            return Math.max(1_000L, configuredInterval);
+        }
+
+        if (!isReportAllStacks()) {
+            if (!warnedMissingDedupResetInterval) {
+                logger.warn("processor.stackHashResetIntervalMillis is not set while processor.reportAllStacks=false. using default 30000ms");
+                warnedMissingDedupResetInterval = true;
+            }
+            return DEFAULT_STACK_HASH_RESET_INTERVAL_IN_DEDUP_MODE_MILLIS;
+        }
+
+        return DEFAULT_STACK_HASH_RESET_INTERVAL_MILLIS;
+    }
+
+    protected Long getConfiguredStackHashResetIntervalMillis() {
+        return Config.get().processor.stackHashResetIntervalMillis;
     }
 
     protected long currentTimeMillis() {

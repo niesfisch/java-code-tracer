@@ -16,8 +16,9 @@ public class Processor {
 
     /**
      * reset interval for remembered stack hashes in dedup mode to cap memory usage
+     * null means not explicitly configured
      */
-    public long stackHashResetIntervalMillis = 300_000L;
+    public Long stackHashResetIntervalMillis;
 
     public String udpHost = "localhost";
     public int udpPort = 9999;

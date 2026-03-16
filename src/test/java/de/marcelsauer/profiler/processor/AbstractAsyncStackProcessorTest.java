@@ -75,6 +75,23 @@ public class AbstractAsyncStackProcessorTest {
         assertEquals(2, processor.getProcessedCount());
     }
 
+    @Test
+    public void thatMissingDedupIntervalFallsBackToThirtySeconds() throws InterruptedException {
+        TestProcessor processor = new TestProcessor(false, null);
+        processor.start();
+
+        processor.process(newEvent("m1"));
+        Thread.sleep(1200L);
+
+        processor.advanceClockMillis(31_000L);
+        processor.process(newEvent("m1"));
+        Thread.sleep(1200L);
+
+        processor.stop();
+
+        assertEquals(2, processor.getProcessedCount());
+    }
+
     private RecordingEvent newEvent(String methodName) {
         Stack.StackEntry entry = new Stack.StackEntry(methodName, 1L, 0);
         return new RecordingEvent(new Stack(Collections.singletonList(entry)));
@@ -82,7 +99,7 @@ public class AbstractAsyncStackProcessorTest {
 
     private static class TestProcessor extends AbstractAsyncStackProcessor {
         private final boolean reportAllStacks;
-        private final long stackHashResetIntervalMillis;
+        private final Long configuredStackHashResetIntervalMillis;
         private long nowMillis;
         private final AtomicInteger processedCount = new AtomicInteger();
         private final List<Integer> batchSizes = Collections.synchronizedList(new ArrayList<Integer>());
@@ -91,9 +108,9 @@ public class AbstractAsyncStackProcessorTest {
             this(true, 300_000L);
         }
 
-        TestProcessor(boolean reportAllStacks, long stackHashResetIntervalMillis) {
+        TestProcessor(boolean reportAllStacks, Long stackHashResetIntervalMillis) {
             this.reportAllStacks = reportAllStacks;
-            this.stackHashResetIntervalMillis = stackHashResetIntervalMillis;
+            this.configuredStackHashResetIntervalMillis = stackHashResetIntervalMillis;
         }
 
         @Override
@@ -118,8 +135,8 @@ public class AbstractAsyncStackProcessorTest {
         }
 
         @Override
-        protected long getStackHashResetIntervalMillis() {
-            return stackHashResetIntervalMillis;
+        protected Long getConfiguredStackHashResetIntervalMillis() {
+            return configuredStackHashResetIntervalMillis;
         }
 
         @Override
