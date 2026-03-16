@@ -12,6 +12,7 @@ If you work in a legacy app and ask things like "Can we remove this?" or "Is thi
 - [Recommended Local Workflow: ELK](#recommended-local-workflow-elk)
 - [Project Status](#project-status)
 - [Java Version](#java-version)
+- [Download a Release Jar](#download-a-release-jar)
 - [Build](#build)
 - [Configure](#configure)
 - [Run an Application with JCT](#run-an-application-with-jct)
@@ -51,11 +52,13 @@ This is especially useful before deleting legacy code, splitting modules, or tig
 
 If you just want first results quickly:
 
-1. Build JCT
+1. Download the release jar or build JCT locally
 2. Start your app with `-javaagent` and a config
 3. Inspect generated events (file output or ELK stack)
 
-Minimum commands:
+Fastest path: download the fat jar from GitHub Releases and use it directly.
+
+Manual build commands:
 
 ```bash
 mvn clean package
@@ -101,9 +104,30 @@ This project targets Java 8 bytecode and is currently focused on practical runti
 JCT is compiled against Java 8 (`-source 8 -target 8`) and intentionally uses no APIs beyond that level.
 This is a deliberate choice — the primary target is legacy and monolithic systems that are often stuck on older JVMs.
 
-It runs fine on newer JVMs (11, 17, 21, …) without any changes.
+It runs fine on newer JVMs (11, 17, 21, ...) without any changes.
+
+## Download a Release Jar
+
+If you do not want to build JCT locally, download the prebuilt agent jar here:
+
+- [GitHub Releases](https://github.com/niesfisch/java-code-tracer/releases)
+- [Release workflow runs and downloadable artifacts](https://github.com/niesfisch/java-code-tracer/actions/workflows/release.yml)
+
+Use this file as your Java agent:
+
+- `java-code-tracer-<version>-jar-with-dependencies.jar`
+
+The release workflow publishes the jar in two places:
+
+- as a GitHub Release asset for tagged releases
+- as a workflow artifact for each `Release Jar` workflow run
+
+For maintainers: pushing a tag like `v1.0.0` starts the release workflow automatically.
+You can also trigger `Release Jar` manually in GitHub Actions and provide a tag name.
 
 ## Build
+
+Build locally with Maven if you prefer or if you want to modify the project:
 
 ```bash
 mvn clean package
@@ -112,6 +136,8 @@ mvn clean package
 The distributable agent jar is created at:
 
 - `target/java-code-tracer-1.0-SNAPSHOT-jar-with-dependencies.jar`
+
+That is the jar you should use with `-javaagent`.
 
 ## Configure
 
@@ -301,4 +327,3 @@ Use the following IntelliJ Run/Debug VM options example when attaching JCT as a 
 ## License
 
 [MIT](LICENSE.txt)
-
