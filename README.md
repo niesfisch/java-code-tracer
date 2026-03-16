@@ -2,7 +2,7 @@
 
 JCT is a Java agent that records real method call stacks while your application is running.
 
-If you work in a legacy app and ask things like "Can we remove this?" or "Is this code path still hit in production-like traffic?", JCT gives you hard runtime evidence instead of guesses.
+If you work in a legacy app and ask things like "Can we remove this?" or "Is this code path still hit in production traffic?", JCT gives you hard runtime evidence instead of guesses.
 
 ## Table of Contents
 
@@ -146,6 +146,7 @@ JCT currently ships with three output processors.
   - Writes one JSON event per line into a daily log file (`jct_yyyy_dd_MM.log`) in `processor.stackFolderName`
   - Best when you want the simplest setup, local debugging, or offline analysis
   - Trade-off: local disk I/O and file handling are on you
+  - Hint: captured traces can get very large on busy systems, so filesystem usage can grow quickly
   - Sample configs: `doc/config-sample-file.yaml`, `src/test/resources/integration/test-config-asyncfile.yaml`
 
 - `de.marcelsauer.profiler.processor.udp.AsyncUdpStackProcessor`
