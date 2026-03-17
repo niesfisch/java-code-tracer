@@ -34,6 +34,16 @@ Grafana:
 - User: `admin`
 - Password: `admin`
 
+DB viewer (ClickLens):
+
+- URL: `http://localhost:3000`
+- Login user: `default`
+- Login password: *(empty)*
+- These credentials are validated against ClickHouse.
+- ClickHouse host: `clickhouse`
+- ClickHouse port: `8123`
+- Use this to run ad-hoc SQL against ClickHouse without curl.
+
 Dashboard provisioning:
 
 - Folder: `JCT`

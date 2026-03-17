@@ -42,6 +42,22 @@ services:
       - grafana-data:/var/lib/grafana
       - ./doc/grafana/provisioning:/etc/grafana/provisioning:ro
 
+  clicklens:
+    image: ghcr.io/ntk148v/clicklens:latest
+    container_name: jct-clicklens
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    environment:
+      - CLICKHOUSE_HOST=clickhouse
+      - CLICKHOUSE_PORT=8123
+      - LENS_USER=default
+      - LENS_PASSWORD=
+      - SESSION_SECRET=0123456789abcdef0123456789abcdef
+      - NODE_ENV=production
+    ports:
+      - "3000:3000"
+
 volumes:
   clickhouse-data:
   grafana-data:
