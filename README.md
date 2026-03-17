@@ -236,7 +236,7 @@ Use the sample loop jar in `doc/helloworld-loop.jar`:
 java \
   -javaagent:"${PWD}/target/java-code-tracer-1.0-SNAPSHOT-jar-with-dependencies.jar" \
   -Djct.loglevel=INFO \
-  -Djct.config="${PWD}/doc/config-sample-helloworld.yaml" \
+  -Djct.config="${PWD}/doc/config-sample-helloworld-file.yaml" \
   -Djct.logDir=/tmp/jct \
   -noverify \
   -jar "${PWD}/doc/helloworld-loop.jar"
