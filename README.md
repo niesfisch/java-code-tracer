@@ -14,6 +14,8 @@ If you work in a legacy app and ask things like "Can we remove this?" or "Is thi
 - [Java Version](#java-version)
 - [Build](#build)
 - [Configure](#configure)
+- [Class Include/Exclude Patterns](#class-includeexclude-patterns)
+- [Hard-Skipped Packages (Non-Overridable)](#hard-skipped-packages-non-overridable)
 - [Run an Application with JCT](#run-an-application-with-jct)
 - [Available Processors](#available-processors)
 - [Stack Volume Control (All vs New Stacks)](#stack-volume-control-all-vs-new-stacks)
@@ -127,6 +129,78 @@ Notes:
 
 - Default config is loaded from `src/main/resources/META-INF/config.yaml`
 - If `-Djct.config=...` is set, custom config is merged with default config
+
+## Class Include/Exclude Patterns
+
+JCT uses Java regex patterns to decide which classes are instrumented.
+
+Config keys:
+
+- `classes.included`: allow list (what JCT may instrument)
+- `classes.excluded`: deny list (what JCT must never instrument)
+
+How matching works:
+
+1. JCT normalizes class names to dot notation for regex matching (example: `de.marcelsauer.sample.ClassA`).
+2. `excluded` is checked first. If any exclude pattern matches, the class is skipped.
+3. If not excluded, `included` is checked. If any include pattern matches, the class is instrumented.
+4. If no include pattern matches, the class is skipped.
+
+Pattern behavior:
+
+- Patterns are standard Java regex (`String.matches`), so anchors like `^` and `$` are recommended.
+- Include patterns are ORed together (`match any include`).
+- Exclude patterns are ORed together (`match any exclude`).
+- Exclude wins over include when both match the same class.
+
+Example:
+
+```yaml
+classes:
+  included:
+    - ^de.marcelsauer.*
+    - ^com.example.legacy.*
+  excluded:
+    - ^de.marcelsauer.generated.*
+    - ^com.example.legacy.internal.*
+```
+
+In this example:
+
+- `de.marcelsauer.service.OrderService` -> instrumented (included, not excluded)
+- `de.marcelsauer.generated.DtoMapper` -> skipped (excluded wins)
+- `org.springframework.context.ApplicationContext` -> skipped (not included)
+
+Practical tips:
+
+- Start narrow (one business package), then widen once you trust the output volume.
+- Always exclude generated/proxy-heavy areas you do not need.
+- Keep regex explicit; broad patterns like `.*` can produce large event volumes.
+
+## Hard-Skipped Packages (Non-Overridable)
+
+JCT has a built-in safety list of package prefixes that are never instrumented, even if your include regex would match them.
+This prevents self-instrumentation and reduces crash risk in JVM/logging/bytecode internals.
+
+Current hard-skipped prefixes (JVM slash notation):
+
+- `de/marcelsauer/profiler/`
+- `java/`
+- `javax/`
+- `jdk/`
+- `sun/`
+- `com/sun/`
+- `org/slf4j/`
+- `ch/qos/logback/`
+- `org/apache/log4j/`
+- `org/apache/logging/log4j/`
+- `javassist/`
+- `net/bytebuddy/`
+- `org/objectweb/asm/`
+- `cglib/`
+- `org/springframework/cglib/`
+
+Source of truth: `de.marcelsauer.profiler.transformer.Transformer` (`HARD_SKIPPED_PREFIXES`).
 
 ## Run an Application with JCT
 
