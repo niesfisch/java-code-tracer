@@ -11,7 +11,7 @@ processor:
     tcpConnectTimeoutMillis: 1000
     tcpReconnectDelayMillis: 1000
     # true = report every captured stack event
-    reportAllStacks: true
-    # used in dedup mode (reportAllStacks: false)
-    stackHashResetIntervalMillis: 300000
+    enableStackDeduplication: false
+    # used in dedup mode (enableStackDeduplication: true)
+    dedupResetIntervalMillis: 300000
 

@@ -45,7 +45,7 @@ public class AbstractAsyncStackProcessorTest {
 
     @Test
     public void thatOnlyNewStacksAreReportedWhenDedupModeIsEnabled() {
-        TestProcessor processor = new TestProcessor(false, 60_000L);
+        TestProcessor processor = new TestProcessor(true, 60_000L);
         processor.start();
 
         processor.process(newEvent("m1"));
@@ -60,7 +60,7 @@ public class AbstractAsyncStackProcessorTest {
 
     @Test
     public void thatSeenHashesAreResetAfterConfiguredInterval() throws InterruptedException {
-        TestProcessor processor = new TestProcessor(false, 1000L);
+        TestProcessor processor = new TestProcessor(true, 1000L);
         processor.start();
 
         processor.process(newEvent("m1"));
@@ -77,7 +77,7 @@ public class AbstractAsyncStackProcessorTest {
 
     @Test
     public void thatMissingDedupIntervalFallsBackToThirtySeconds() throws InterruptedException {
-        TestProcessor processor = new TestProcessor(false, null);
+        TestProcessor processor = new TestProcessor(true, null);
         processor.start();
 
         processor.process(newEvent("m1"));
@@ -98,19 +98,19 @@ public class AbstractAsyncStackProcessorTest {
     }
 
     private static class TestProcessor extends AbstractAsyncStackProcessor {
-        private final boolean reportAllStacks;
-        private final Long configuredStackHashResetIntervalMillis;
+        private final boolean enableStackDeduplication;
+        private final Long configuredDedupResetIntervalMillis;
         private long nowMillis;
         private final AtomicInteger processedCount = new AtomicInteger();
         private final List<Integer> batchSizes = Collections.synchronizedList(new ArrayList<Integer>());
 
         TestProcessor() {
-            this(true, 300_000L);
+            this(false, 300_000L);
         }
 
-        TestProcessor(boolean reportAllStacks, Long stackHashResetIntervalMillis) {
-            this.reportAllStacks = reportAllStacks;
-            this.configuredStackHashResetIntervalMillis = stackHashResetIntervalMillis;
+        TestProcessor(boolean enableStackDeduplication, Long dedupResetIntervalMillis) {
+            this.enableStackDeduplication = enableStackDeduplication;
+            this.configuredDedupResetIntervalMillis = dedupResetIntervalMillis;
         }
 
         @Override
@@ -130,13 +130,13 @@ public class AbstractAsyncStackProcessorTest {
         }
 
         @Override
-        protected boolean isReportAllStacks() {
-            return reportAllStacks;
+        protected boolean isStackDeduplicationEnabled() {
+            return enableStackDeduplication;
         }
 
         @Override
-        protected Long getConfiguredStackHashResetIntervalMillis() {
-            return configuredStackHashResetIntervalMillis;
+        protected Long getConfiguredDedupResetIntervalMillis() {
+            return configuredDedupResetIntervalMillis;
         }
 
         @Override

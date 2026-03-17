@@ -176,12 +176,12 @@ If your main question is only "Was this path hit at least once?", you can report
 
 Processor flags:
 
-- `processor.reportAllStacks`
-  - `true` (default): report every captured event
-  - `false`: report only first-seen stack hashes within the current dedup window
-- `processor.stackHashResetIntervalMillis`
+- `processor.enableStackDeduplication`
+  - `true`: report only first-seen stack hashes within the current dedup window
+  - `false` (default): report every captured event
+- `processor.dedupResetIntervalMillis`
   - Periodically clears remembered stack hashes to cap memory usage in long-running JVMs
-  - In dedup mode (`reportAllStacks: false`): if missing, JCT logs a warning and uses `30000` (30 seconds)
+  - In dedup mode (`enableStackDeduplication: true`): if missing, JCT logs a warning and uses `30000` (30 seconds)
 
 Example: report only new stacks (good for high-traffic legacy systems)
 
@@ -190,8 +190,8 @@ processor:
   fullQualifiedClass: de.marcelsauer.profiler.processor.udp.AsyncUdpStackProcessor
   udpHost: localhost
   udpPort: 9999
-  reportAllStacks: false
-  stackHashResetIntervalMillis: 300000
+  enableStackDeduplication: true
+  dedupResetIntervalMillis: 300000
 ```
 
 Example: report all stacks (full event stream)
@@ -200,7 +200,7 @@ Example: report all stacks (full event stream)
 processor:
   fullQualifiedClass: de.marcelsauer.profiler.processor.file.AsyncFileWritingStackProcessor
   stackFolderName: /tmp/stacks/
-  reportAllStacks: true
+  enableStackDeduplication: false
 ```
 
 ## Message Format

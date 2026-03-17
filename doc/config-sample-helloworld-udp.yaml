@@ -9,6 +9,6 @@ processor:
     udpHost: localhost
     udpPort: 9999
     # report only first-seen stacks in a time window
-    reportAllStacks: false
+    enableStackDeduplication: true
     # reset dedup hashes every 5 minutes to cap memory usage
-    stackHashResetIntervalMillis: 300000
+    dedupResetIntervalMillis: 300000

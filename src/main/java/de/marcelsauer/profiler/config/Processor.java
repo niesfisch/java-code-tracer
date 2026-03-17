@@ -9,16 +9,16 @@ public class Processor {
     public String fullQualifiedClass;
 
     /**
-     * true: report every captured stack event
-     * false: report only first-seen stack hashes until periodic reset
+     * true: report only first-seen stack hashes until periodic reset
+     * false: report every captured stack event
      */
-    public boolean reportAllStacks = true;
+    public boolean enableStackDeduplication = false;
 
     /**
      * reset interval for remembered stack hashes in dedup mode to cap memory usage
      * null means not explicitly configured
      */
-    public Long stackHashResetIntervalMillis;
+    public Long dedupResetIntervalMillis;
 
     public String udpHost = "localhost";
     public int udpPort = 9999;

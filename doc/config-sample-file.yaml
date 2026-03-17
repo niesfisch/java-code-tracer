@@ -10,7 +10,7 @@ classes:
 processor:
     fullQualifiedClass: de.marcelsauer.profiler.processor.file.AsyncFileWritingStackProcessor
     stackFolderName: /tmp/stacks/
-    # true = report every captured stack event
-    reportAllStacks: true
-    # used in dedup mode (reportAllStacks: false) to reset remembered hashes
-    stackHashResetIntervalMillis: 300000
+    # true = enable stack deduplication (only report unique stacks)
+    enableStackDeduplication: false
+    # used in dedup mode (enableStackDeduplication: true) to reset remembered hashes
+    dedupResetIntervalMillis: 300000

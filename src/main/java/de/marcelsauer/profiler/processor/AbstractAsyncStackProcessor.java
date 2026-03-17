@@ -21,8 +21,8 @@ public abstract class AbstractAsyncStackProcessor implements StackProcessor {
     private static final String JCA_PROCESSOR_THREAD = "jca-processor-thread";
     private static final int CAPACITY = 100_000;
     private static final int DRAIN_BATCH_SIZE = 2048;
-    private static final long DEFAULT_STACK_HASH_RESET_INTERVAL_MILLIS = 300_000L;
-    private static final long DEFAULT_STACK_HASH_RESET_INTERVAL_IN_DEDUP_MODE_MILLIS = 30_000L;
+    private static final long DEFAULT_DEDUP_RESET_INTERVAL_MILLIS = 300_000L;
+    private static final long DEFAULT_DEDUP_RESET_INTERVAL_IN_DEDUP_MODE_MILLIS = 30_000L;
 
     /**
      * counters
@@ -35,7 +35,7 @@ public abstract class AbstractAsyncStackProcessor implements StackProcessor {
     private final List<RecordingEvent> drainBuffer = new ArrayList<>(DRAIN_BATCH_SIZE);
     private final List<RecordingEvent> dedupBuffer = new ArrayList<>(DRAIN_BATCH_SIZE);
     private final Set<Integer> seenStackHashes = new HashSet<>();
-    private long nextStackHashResetAtMillis = 0L;
+    private long nextDedupResetAtMillis = 0L;
     private boolean warnedMissingDedupResetInterval;
 
     /**
@@ -145,7 +145,7 @@ public abstract class AbstractAsyncStackProcessor implements StackProcessor {
     }
 
     private Collection<RecordingEvent> filterReportableStacks(Collection<RecordingEvent> snapshot) {
-        if (isReportAllStacks()) {
+        if (!isStackDeduplicationEnabled()) {
             return snapshot;
         }
 
@@ -162,44 +162,44 @@ public abstract class AbstractAsyncStackProcessor implements StackProcessor {
 
     private void maybeResetSeenStackHashes() {
         long now = currentTimeMillis();
-        if (now < nextStackHashResetAtMillis) {
+        if (now < nextDedupResetAtMillis) {
             return;
         }
 
         int clearedCount = seenStackHashes.size();
         seenStackHashes.clear();
-        nextStackHashResetAtMillis = now + getStackHashResetIntervalMillis();
-        logger.info(String.format("dedup cache purged: cleared %d stack hash(es), next reset in %dms", clearedCount, getStackHashResetIntervalMillis()));
+        nextDedupResetAtMillis = now + getDedupResetIntervalMillis();
+        logger.info(String.format("dedup cache purged: cleared %d stack hash(es), next reset in %dms", clearedCount, getDedupResetIntervalMillis()));
     }
 
     private void resetDedupWindow() {
         seenStackHashes.clear();
-        nextStackHashResetAtMillis = currentTimeMillis() + getStackHashResetIntervalMillis();
+        nextDedupResetAtMillis = currentTimeMillis() + getDedupResetIntervalMillis();
     }
 
-    protected boolean isReportAllStacks() {
-        return Config.get().processor.reportAllStacks;
+    protected boolean isStackDeduplicationEnabled() {
+        return Config.get().processor.enableStackDeduplication;
     }
 
-    protected long getStackHashResetIntervalMillis() {
-        Long configuredInterval = getConfiguredStackHashResetIntervalMillis();
+    protected long getDedupResetIntervalMillis() {
+        Long configuredInterval = getConfiguredDedupResetIntervalMillis();
         if (configuredInterval != null) {
             return Math.max(1_000L, configuredInterval);
         }
 
-        if (!isReportAllStacks()) {
+        if (isStackDeduplicationEnabled()) {
             if (!warnedMissingDedupResetInterval) {
-                logger.warn("processor.stackHashResetIntervalMillis is not set while processor.reportAllStacks=false. using default 30000ms");
+                logger.warn("processor.dedupResetIntervalMillis is not set while processor.enableStackDeduplication=true. using default 30000ms");
                 warnedMissingDedupResetInterval = true;
             }
-            return DEFAULT_STACK_HASH_RESET_INTERVAL_IN_DEDUP_MODE_MILLIS;
+            return DEFAULT_DEDUP_RESET_INTERVAL_IN_DEDUP_MODE_MILLIS;
         }
 
-        return DEFAULT_STACK_HASH_RESET_INTERVAL_MILLIS;
+        return DEFAULT_DEDUP_RESET_INTERVAL_MILLIS;
     }
 
-    protected Long getConfiguredStackHashResetIntervalMillis() {
-        return Config.get().processor.stackHashResetIntervalMillis;
+    protected Long getConfiguredDedupResetIntervalMillis() {
+        return Config.get().processor.dedupResetIntervalMillis;
     }
 
     protected long currentTimeMillis() {

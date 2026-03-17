@@ -7,5 +7,5 @@ classes:
 processor:
     fullQualifiedClass: de.marcelsauer.profiler.processor.file.AsyncFileWritingStackProcessor
     stackFolderName: /tmp/stacks/
-    reportAllStacks: true
-    stackHashResetIntervalMillis: 300000
+    enableStackDeduplication: false
+    dedupResetIntervalMillis: 300000
