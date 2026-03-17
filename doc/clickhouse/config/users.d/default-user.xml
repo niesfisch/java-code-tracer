@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<!-- Allow the default user without a password for local dev/tracing use. -->
+<clickhouse>
+    <users>
+        <default>
+            <password></password>
+            <networks>
+                <ip>::/0</ip>
+            </networks>
+            <profile>default</profile>
+            <quota>default</quota>
+        </default>
+    </users>
+</clickhouse>
+

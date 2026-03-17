@@ -1,0 +1,48 @@
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.12
+    container_name: jct-clickhouse
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+      - ./doc/clickhouse/init:/docker-entrypoint-initdb.d:ro
+      - ./doc/clickhouse/config/users.d:/etc/clickhouse-server/users.d:ro
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8123/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  vector:
+    image: timberio/vector:0.44.0-debian
+    container_name: jct-vector
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    volumes:
+      - ./doc/vector/vector.toml:/etc/vector/vector.toml:ro
+      - /tmp/stacks:/var/log/jct_stacks:ro
+    command: ["--config", "/etc/vector/vector.toml"]
+
+  grafana:
+    image: grafana/grafana:11.6.1
+    container_name: jct-grafana
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    ports:
+      - "5601:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_INSTALL_PLUGINS=grafana-clickhouse-datasource
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./doc/grafana/provisioning:/etc/grafana/provisioning:ro
+
+volumes:
+  clickhouse-data:
+  grafana-data:
+

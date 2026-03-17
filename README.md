@@ -10,6 +10,8 @@ If you work in a legacy app and ask things like "Can we remove this?" or "Is thi
 - [What JCT Does at Runtime](#what-jct-does-at-runtime)
 - [Quick Start in 3 Steps](#quick-start-in-3-steps)
 - [Recommended Local Workflow: ELK](#recommended-local-workflow-elk)
+- [Alternative Stack: ClickHouse + Vector + Grafana](#alternative-stack-clickhouse--vector--grafana)
+- [ELK vs. ClickHouse — When to Choose Which](#elk-vs-clickhouse--when-to-choose-which)
 - [Project Status](#project-status)
 - [Java Version](#java-version)
 - [Build](#build)
@@ -92,6 +94,49 @@ This gives you a fast feedback loop: run traffic, query traces, validate code pa
 Start here:
 
 - [README-ELK.md](README-ELK.md)
+- [doc/README-ClickHouse-Grafana.md](doc/README-ClickHouse-Grafana.md)
+
+## Alternative Stack: ClickHouse + Vector + Grafana
+
+If you want stronger analytics, faster aggregations over large event volumes, or a lighter-weight alternative to Elasticsearch, JCT also ships a second Docker Compose stack based on ClickHouse + Vector + Grafana.
+
+```
+  -javaagent:jct.jar
+  +-------------------+
+  | App + JCT Agent   |     /tmp/stacks/jct_*.log
+  | File Processor    |--+
+  +-------------------+  |
+                         |   Vector (tail + forward)
+                         +-->  ClickHouse: jct_raw
+                                    |
+                              Materialized View
+                                    |
+                             jct_events (parsed)
+                                    |
+                             Grafana :5601
+                            (pre-built dashboard)
+```
+
+Start here: [doc/README-ClickHouse-Grafana.md](doc/README-ClickHouse-Grafana.md)
+
+## ELK vs. ClickHouse — When to Choose Which
+
+Both stacks run locally via `docker compose` and need no cloud setup.
+
+| Criterion | ELK (Elastic + Kibana) | ClickHouse + Grafana |
+|---|---|---|
+| **Setup effort** | Medium — three containers, index pattern setup in Kibana UI | Medium — three containers, datasource and dashboard auto-provisioned |
+| **Query style** | KQL / Lucene (full-text search focused) | SQL (aggregation and analytics focused) |
+| **Best for** | Searching for specific stack occurrences, filtering by text | Aggregating, counting, trending over high volumes |
+| **Event volume** | Good up to low millions; indexing is memory-heavy | Excellent for large volumes; columnar storage compresses well |
+| **Ad-hoc exploration** | Kibana Discover is fast for browsing raw events | ClickHouse Play UI or Grafana Explore for SQL queries |
+| **Dashboard UX** | Kibana Lens (good) | Grafana (good, pre-built panels included) |
+| **Transport** | UDP or TCP → Logstash | File processor → Vector tails log files |
+| **When to pick** | You are already familiar with Kibana, or want full-text search | You want SQL analytics, hot-frame counts, or handle high traffic |
+
+**Rule of thumb:**
+- Not sure which to pick? Start with **ELK** — Kibana's Discover view is the fastest way to browse raw stacks.
+- Running a busy system or want to aggregate across thousands of events? Use **ClickHouse + Grafana** — SQL `GROUP BY class_name` queries are instant even on millions of rows.
 
 ## Project Status
 

@@ -1,0 +1,23 @@
+data_dir = "/var/lib/vector"
+
+[sources.jct_file]
+type = "file"
+include = ["/var/log/jct_stacks/jct_*.log"]
+read_from = "beginning"
+
+[transforms.rename_field]
+type = "remap"
+inputs = ["jct_file"]
+source = '''
+.raw_json = string!(.message)
+del(.message)
+'''
+
+[sinks.jct_clickhouse]
+type = "clickhouse"
+inputs = ["rename_field"]
+endpoint = "http://clickhouse:8123"
+database = "default"
+table = "jct_raw"
+skip_unknown_fields = true
+
