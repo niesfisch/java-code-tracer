@@ -123,13 +123,19 @@ For TCP, use:
 Example run (hello world sample):
 
 ```bash
+cd sample_application && mvn clean package
+```
+
+Then start with agent and UDP output:
+
+```bash
 java \
   -javaagent:"${PWD}/target/java-code-tracer-1.0-SNAPSHOT-jar-with-dependencies.jar" \
   -Djct.loglevel=INFO \
   -Djct.config="${PWD}/doc/config-sample-helloworld-udp.yaml" \
   -Djct.logDir=/tmp/jct \
   -noverify \
-  -jar "${PWD}/doc/helloworld-loop.jar"
+  -jar "${PWD}/doc/java-code-tracer-sample-application.jar"
 ```
 
 To run over TCP, switch config file to:

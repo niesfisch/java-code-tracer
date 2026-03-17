@@ -48,8 +48,8 @@ public class Instrumenter {
                     if (instrumented) {
                         Statistics.addInstrumentedMethod(declaredMethod.getLongName());
                     }
-                } catch (Exception e) {
-                    logger.warn(String.format("could not instrument method '%s': %s", className, e.getMessage()));
+                } catch (Throwable t) {
+                    logger.warn(String.format("could not instrument method '%s': %s", className, t.getMessage()));
                     return null;
                 }
             }
@@ -60,7 +60,7 @@ public class Instrumenter {
             Statistics.addInstrumentedClass(className);
 
             return bytes;
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
             logger.warn(String.format("could not instrument class '%s': %s", className, ex.getMessage()));
             return null;
         }

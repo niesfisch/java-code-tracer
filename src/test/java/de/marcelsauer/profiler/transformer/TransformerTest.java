@@ -55,10 +55,11 @@ public class TransformerTest {
         Instrumenter instrumenter = mock(Instrumenter.class);
         transformer.instrumenter = instrumenter;
         byte[] out = {};
-        when(instrumenter.instrument(eq("de/marcelsauer/profiler/ClassA"), eq(loader))).thenReturn(out);
+        // use a non-profiler class so the built-in self-exclusion doesn't block it
+        when(instrumenter.instrument(eq("de/marcelsauer/sample/ClassA"), eq(loader))).thenReturn(out);
 
         // when
-        byte[] outBuffer = transformer.transform(loader, "de/marcelsauer/profiler/ClassA", null, null, new byte[]{});
+        byte[] outBuffer = transformer.transform(loader, "de/marcelsauer/sample/ClassA", null, null, new byte[]{});
 
         // then
         assertEquals(outBuffer, out);

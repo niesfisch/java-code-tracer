@@ -1,0 +1,14 @@
+# some comment
+classes:
+    included:
+        - ^de.marcelsauer.sample.Class.*
+    excluded: []
+processor:
+    fullQualifiedClass: de.marcelsauer.profiler.processor.file.AsyncFileWritingStackProcessor
+    stackFolderName: /tmp/stacks/
+    # false = report every captured stack event
+    # true = report only new stacks in dedup time window (dedupResetIntervalMillis)
+    enableStackDeduplication: false
+    # used in dedup mode (enableStackDeduplication: true)
+    dedupResetIntervalMillis: 300000
+

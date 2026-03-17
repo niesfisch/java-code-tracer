@@ -22,6 +22,7 @@ If you work in a legacy app and ask things like "Can we remove this?" or "Is thi
 - [Hello World Walkthrough](#hello-world-walkthrough)
 - [Tools](#tools)
 - [ELK Integration Guide](#elk-integration-guide)
+- [Sample Application Screenshots](#sample-application-screenshots)
 - [Similar Projects](#similar-projects)
 - [IntelliJ JVM Options Example](#intellij-jvm-options-example)
 - [License](#license)
@@ -60,7 +61,7 @@ Minimum commands:
 ```bash
 mvn clean package
 mkdir -p "$HOME/.jct"
-cp doc/config-sample-file.yaml "$HOME/.jct/config-sample-file.yaml"
+cp doc/config-sample-application-file.yaml "$HOME/.jct/config-sample-file.yaml"
 java \
   -javaagent:"${PWD}/target/java-code-tracer-1.0-SNAPSHOT-jar-with-dependencies.jar" \
   -Djct.config="$HOME/.jct/config-sample-file.yaml" \
@@ -207,11 +208,20 @@ processor:
 
 ```json
 {
-  "stack": [
-    "de.example.Service.doWork()",
-    "de.example.Repository.findById()"
-  ],
-  "timestampMillis": "1528120883697"
+	"stack": [
+		"de.marcelsauer.sample.ClassA.methodA_1()",
+		"de.marcelsauer.sample.ClassB.methodB_2()",
+		"de.marcelsauer.sample.ClassB.methodB_3()",
+		"de.marcelsauer.sample.ClassC.methodC_4()",
+		"de.marcelsauer.sample.ClassD.methodD_5()",
+		"de.marcelsauer.sample.ClassE.methodE_6()",
+		"de.marcelsauer.sample.ClassF.methodF_7()",
+		"de.marcelsauer.sample.ClassG.methodG_8()",
+		"de.marcelsauer.sample.ClassH.methodH_9()",
+		"de.marcelsauer.sample.ClassI.methodI_10()",
+		"de.marcelsauer.sample.ClassJ.methodJ_11()"
+	],
+	"timestampMillis": "1528120883697"
 }
 ```
 
@@ -228,19 +238,29 @@ For more instrumentation details, increase log level:
 -Djct.loglevel=DEBUG
 ```
 
-## Hello World Walkthrough
+Hint: `DEBUG` is useful when you want to see what happens behind the scenes (for example class matching, instrumentation attempts, and skipped classes).
 
-Use the sample loop jar in `doc/helloworld-loop.jar`:
+## Sample Application Walkthrough
+
+Build the sample app jar to `doc/java-code-tracer-sample-application.jar`:
+
+```bash
+cd sample_application && mvn clean package && cd ..
+```
+
+Then run it with the agent from the repository root (`java-code-tracer`):
 
 ```bash
 java \
   -javaagent:"${PWD}/target/java-code-tracer-1.0-SNAPSHOT-jar-with-dependencies.jar" \
   -Djct.loglevel=INFO \
-  -Djct.config="${PWD}/doc/config-sample-helloworld-file.yaml" \
+  -Djct.config="${PWD}/doc/config-sample-application-file.yaml" \
   -Djct.logDir=/tmp/jct \
   -noverify \
-  -jar "${PWD}/doc/helloworld-loop.jar"
+  -jar "${PWD}/doc/java-code-tracer-sample-application.jar"
 ```
+
+> **Note on class patterns:** JCT emits a stack trace only when the *outermost* tracked frame returns. If you include a class whose method runs forever (like `main()` or an endless loop driver), no traces will ever be written. Use a pattern that targets the inner chain classes — see `doc/config-sample-application-file.yaml` for an example using `^de.marcelsauer.sample.Class.*`.
 
 Check agent logs:
 
@@ -253,7 +273,6 @@ cat /tmp/jct/jct_agent.log
 ### Stack Formatter (`tools/format_stack.py`)
 
 Pretty-prints a raw JCT `stack` array into an aligned, human-readable call sequence.
-Consecutive calls to the same class are grouped — package names are abbreviated.
 
 Requires Python 3.9+, no dependencies.
 
@@ -271,12 +290,19 @@ xclip -o | python3 tools/format_stack.py
 Example output:
 
 ```
-   #  package        class                  method
-  ──────────────────────────────────────────────────────
-   1  o.b.s.u.ldap   LdapConnectionFactory  .initialize(LdapConnectionConfigurationDTO)
-   2                                        .connect()
-   3  o.b.s.u.ldap   LdapConnectionConfigurationDTO  .getLdapServer1()
-  ...
+   #  package                class   method
+  ─────────────────────────────────────────────────────────────────────────
+   1  de.marcelsauer.sample  ClassA  .methodA_1()
+   2  de.marcelsauer.sample  ClassB  .methodB_2()
+   3                                 .methodB_3()
+   4  de.marcelsauer.sample  ClassC  .methodC_4()
+   5  de.marcelsauer.sample  ClassD  .methodD_5()
+   6  de.marcelsauer.sample  ClassE  .methodE_6()
+   7  de.marcelsauer.sample  ClassF  .methodF_7()
+   8  de.marcelsauer.sample  ClassG  .methodG_8()
+   9  de.marcelsauer.sample  ClassH  .methodH_9()
+  10  de.marcelsauer.sample  ClassI  .methodI_10()
+  11  de.marcelsauer.sample  ClassJ  .methodJ_11()
 ```
 
 ## ELK Integration Guide
@@ -285,6 +311,19 @@ For local Elasticsearch + Logstash + Kibana setup (Docker), UI access, data view
 
 - [README-ELK.md](README-ELK.md)
 - [README-analysis-ELK.md](README-ELK-analysys.md)
+
+## Sample Application Screenshots
+
+### Start with agent
+![Kibana Discover](doc/sample_app_start.png)
+### JCT logs after start
+![Kibana Discover](doc/sample_app_jct_log.png)
+### Captured stacks if AsyncFileWritingStackProcessor is configured
+![Kibana Discover](doc/sample_app_stacks.png)
+### Captured stacks in Kibana 'Discover' View if ELK stack is used 
+![Kibana Discover](doc/kibana_1.png)
+### Captured stacks in Kibana 'Visualization/Lens' View if ELK stack is used 
+![Kibana Visualization](doc/kibana_2.png)
 
 ## Similar Projects
 

@@ -27,17 +27,26 @@ public class Transformer implements ClassFileTransformer {
     }
 
     public byte[] transform(ClassLoader loader, String className, Class klass, ProtectionDomain domain, byte[] byteCode) throws IllegalClassFormatException {
-        if (loader == null) {
-            logger.debug(String.format("[skipping bootstrap class] '%s'.", className));
+        try {
+            if (loader == null) {
+                logger.debug(String.format("[skipping bootstrap class] '%s'.", className));
+                return byteCode;
+            }
+
+            boolean shouldBeInstrumented = combinedFilter.matches(className);
+            if (shouldBeInstrumented) {
+                logger.debug(String.format("[instrumenting] '%s'.", className));
+                byte[] transformed = this.instrumenter.instrument(className, loader);
+                // null means "skip transformation" per ClassFileTransformer contract
+                return transformed != null ? transformed : byteCode;
+            }
+            return byteCode;
+        } catch (Throwable t) {
+            // Never let any exception escape the transformer — the JVM JPLIS layer
+            // turns uncaught throwables into the ugly "!errorOutstanding" native assertion.
+            logger.warn(String.format("transform failed for '%s', returning original bytecode: %s", className, t.getMessage()));
             return byteCode;
         }
-
-        boolean shouldBeInstrumented = combinedFilter.matches(className);
-        if (shouldBeInstrumented) {
-            logger.debug(String.format("[instrumenting] '%s'.", className));
-            return this.instrumenter.instrument(className, loader);
-        }
-        return byteCode;
     }
 
 }
