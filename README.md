@@ -268,6 +268,12 @@ Check agent logs:
 cat /tmp/jct/jct_agent.log
 ```
 
+Check captured stacks:
+
+```bash
+cat /tmp/stacks/jct_*
+```
+
 ## Tools
 
 ### Stack Formatter (`tools/format_stack.py`)
