@@ -43,6 +43,21 @@ DB viewer (ClickLens):
 - ClickHouse host: `clickhouse`
 - ClickHouse port: `8123`
 - Use this to run ad-hoc SQL against ClickHouse without curl.
+- Hint: if `http://localhost:3000` does not open, verify the container is up with `docker compose -f docker-compose-clickhouse.yml ps`.
+
+Browse tables in ClickLens:
+
+1. Open `http://localhost:3000` and log in with `default` and an empty password.
+2. Open the ClickHouse connection and select database `default`.
+3. Expand `Tables` to see `jct_raw` (raw ingest) and `jct_events` (parsed events).
+4. Open a table and use the data preview, or run SQL in the query editor, for example:
+
+```sql
+SELECT *
+FROM default.jct_events
+ORDER BY ingest_time DESC
+LIMIT 100;
+```
 
 Dashboard provisioning:
 
@@ -73,6 +88,8 @@ docker volume rm java-code-tracer_clickhouse-data java-code-tracer_grafana-data
 
 Use a file-based config such as `doc/config-sample-application-file.yaml` and write to `/tmp/stacks`.
 
+Important: make sure `processor.fullQualifiedClass` is set to `de.marcelsauer.profiler.processor.file.AsyncFileWritingStackProcessor`. This ClickHouse setup polls/tails log files from `/tmp/stacks`; UDP/TCP processors will not produce files for Vector to ingest.
+
 ## Verify ingestion quickly
 
 ```zsh
@@ -94,6 +111,14 @@ curl -s "http://localhost:8123/?query=<URL-encoded SQL>"
 ```
 
 Or open the ClickHouse Play UI at `http://localhost:8123/play`.
+
+All stacks that contain a class or method with name "someMethodA" (case-insensitive)
+
+```sql
+SELECT *
+FROM default.jct_events
+WHERE arrayExists(frame -> lowerUTF8(frame) LIKE '%someMethodA%', stack);
+```
 
 Top classes in the last 15 minutes:
 
