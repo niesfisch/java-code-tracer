@@ -23,7 +23,12 @@ services:
         condition: service_healthy
     volumes:
       - ./doc/vector/vector.toml:/etc/vector/vector.toml:ro
-      - /tmp/stacks:/var/log/jct_stacks:ro
+      - type: bind
+        source: ${JCT_STACKS_DIR:-/tmp/stacks}
+        target: /var/log/jct_stacks
+        read_only: true
+        bind:
+          create_host_path: false
     command: ["--config", "/etc/vector/vector.toml"]
 
   grafana:

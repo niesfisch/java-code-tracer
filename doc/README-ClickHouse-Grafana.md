@@ -23,6 +23,21 @@ This avoids VRL type-system complexity and keeps the Vector config minimal.
 
 ## Start the stack
 
+Before bootstrapping with Docker Compose, create the host stack directory yourself. This prevents Docker from creating it as `root`.
+
+```zsh
+mkdir -p /tmp/stacks
+chmod 775 /tmp/stacks
+```
+
+If you prefer a different path, set `JCT_STACKS_DIR` and use the same path in your JCT file processor config (`processor.stackFolderName`):
+
+```zsh
+export JCT_STACKS_DIR=/path/you/can/write
+mkdir -p "$JCT_STACKS_DIR"
+chmod 775 "$JCT_STACKS_DIR"
+```
+
 ```zsh
 cd /home/msauer/dev/workspace-private/java-code-tracer
 docker compose -f docker-compose-clickhouse.yml up -d
@@ -86,7 +101,7 @@ docker volume rm java-code-tracer_clickhouse-data java-code-tracer_grafana-data
 
 ## Run your app with JCT (file processor)
 
-Use a file-based config such as `doc/config-sample-application-file.yaml` and write to `/tmp/stacks`.
+Use a file-based config such as `doc/config-sample-application-file.yaml` and write to the same host path mounted into Vector (default: `/tmp/stacks`, or `JCT_STACKS_DIR` if set).
 
 Important: make sure `processor.fullQualifiedClass` is set to `de.marcelsauer.profiler.processor.file.AsyncFileWritingStackProcessor`. This ClickHouse setup polls/tails log files from `/tmp/stacks`; UDP/TCP processors will not produce files for Vector to ingest.
 
@@ -190,7 +205,8 @@ SELECT count(*) FROM default.jct_events;
 
 **Vector exits on startup:**
 - Check logs: `docker compose -f docker-compose-clickhouse.yml logs vector`
-- Confirm `/tmp/stacks` contains `jct_*.log` files.
+- Confirm the mounted stack directory exists and contains `jct_*.log` files (`/tmp/stacks` by default, or `JCT_STACKS_DIR`).
+- If Compose reports bind-mount errors, create the host folder manually and ensure your app user can write there.
 
 **ClickHouse authentication errors (403/516):**
 - Ensure `doc/clickhouse/config/users.d/default-user.xml` is present and mounted.
