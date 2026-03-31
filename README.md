@@ -1,3 +1,5 @@
+![Java Code Tracer Logo](doc/code_tracer_logo.png)
+
 # Java Code Tracer (JCT)
 
 JCT is a Java agent that records real method call stacks while your application is running.
