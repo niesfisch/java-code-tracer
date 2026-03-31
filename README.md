@@ -1,4 +1,4 @@
-<img src="doc/code_tracer_logo.png" alt="Java Code Tracer Logo" width="320" />
+<img src="doc/code_tracer_logo_new.png" alt="Java Code Tracer Logo" width="320" />
 
 # Java Code Tracer (JCT)
 
